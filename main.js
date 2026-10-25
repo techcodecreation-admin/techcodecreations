@@ -470,7 +470,7 @@ class TechCodeApp {
         <!-- Bill Header -->
         <div class="bill-header">
           <div class="bill-brand-info">
-            <img src="assets/images/logo.png" alt="Tech Code Creations" class="bill-logo-img">
+            <img src="logo.png" alt="Tech Code Creations" class="bill-logo-img">
             <div>
               <div class="bill-company-title">TECH CODE CREATIONS</div>
               <div style="font-size:0.85rem; font-weight:700; color:#2563eb;">YOUR VISION • OUR CODE • YOUR WEBSITE</div>

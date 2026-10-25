@@ -11,7 +11,7 @@
 ## 🌟 Key Features & Sections
 
 1. **Brand Identity & High-Tech Styling**:
-   - Official 3D Glossy TC Logo integrated (`assets/images/logo.png`).
+   - Official 3D Glossy TC Logo integrated (`logo.png`).
    - Deep Cyber-Tech Dark Theme by default + instant Light Mode toggle.
    - Smooth glassmorphism, responsive animated device mockups, and glowing accents.
 
