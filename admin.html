@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal & Bill Generator | Tech Code Creations</title>
+  <meta name="description" content="Tech Code Creations Admin Portal - Manage website bookings and generate official client bills & invoices.">
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    .admin-standalone-wrapper {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f8fafc;
+    }
+    .admin-nav-top {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+    .admin-container-inner {
+      padding: 40px 0 80px;
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-mesh-grid"></div>
+
+  <div class="admin-standalone-wrapper">
+    <!-- Top Admin Header -->
+    <header class="admin-nav-top">
+      <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <a href="index.html" class="brand-link">
+            <div class="brand-logo-container">
+              <img src="assets/images/logo.png" alt="Tech Code Creations" class="brand-logo-img">
+            </div>
+            <div class="brand-text">
+              <div class="brand-name">Tech Code <span>Creations</span></div>
+              <div class="brand-subtext">Admin Control System</div>
+            </div>
+          </a>
+
+          <div style="display:flex; align-items:center; gap:16px;">
+            <a href="index.html" class="btn btn-secondary" style="font-size:0.88rem; padding:8px 18px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              <span>View Main Website</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="admin-container-inner">
+      <div class="container">
+        <!-- Login Card -->
+        <div class="admin-login-card" id="adminLoginCard">
+          <div class="admin-lock-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <h2 style="font-size:1.8rem; margin-bottom:6px;">Admin Portal Login</h2>
+          <p style="color:var(--text-secondary); margin-bottom:24px;">Please enter administrative credentials to access booking records & bills.</p>
+
+          <form id="adminLoginForm">
+            <div class="form-group" style="text-align:left; margin-bottom: 16px;">
+              <label class="form-label" for="adminUsername">Username</label>
+              <input type="text" id="adminUsername" class="form-control" placeholder="TechCodeCreation" required autocomplete="username">
+            </div>
+
+            <div class="form-group" style="text-align:left; margin-bottom: 20px; position:relative;">
+              <label class="form-label" for="adminPassword">Password</label>
+              <input type="password" id="adminPassword" class="form-control" placeholder="••••••••••••" required autocomplete="current-password">
+              <button type="button" id="togglePassBtn" style="position:absolute; right:14px; top:38px; background:none; border:none; color:var(--text-secondary); cursor:pointer;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </button>
+            </div>
+
+            <div id="adminLoginError" style="display:none; color:#ef4444; font-size:0.85rem; margin-bottom:14px; font-weight:700;"></div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%;" id="btnAdminSignIn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+              <span>Sign In to Dashboard</span>
+            </button>
+          </form>
+
+          <div class="credentials-hint">
+            <div style="font-weight:700; margin-bottom:4px; color:#0f172a;">Configured Credentials:</div>
+            <div>Username: <code>TechCodeCreation</code></div>
+            <div>Password: <code>techcode@12345</code></div>
+            <button type="button" class="btn btn-secondary" id="fillDemoCredsBtn" style="padding:4px 12px; font-size:0.75rem; margin-top:8px;">
+              ⚡ Auto-Fill Credentials
+            </button>
+          </div>
+        </div>
+
+        <!-- Dashboard View (Shown once logged in) -->
+        <div class="admin-dashboard-container" id="adminDashboardContainer">
+          <!-- Header Bar -->
+          <div class="admin-dashboard-header">
+            <div>
+              <div class="admin-user-pill">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                <span>Active Administrator: <strong>TechCodeCreation</strong></span>
+              </div>
+              <h1 style="font-size:2rem; margin-top:8px; color:#0f172a;">Client Orders & Bill Generator</h1>
+            </div>
+            <div class="admin-actions-bar">
+              <button class="btn btn-secondary" onclick="openModal('manualOrderModal')" id="btnAddManualOrder">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Add Offline Booking</span>
+              </button>
+              <button class="btn btn-secondary" id="exportCsvBtn" title="Export as CSV spreadsheet">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export CSV</span>
+              </button>
+              <button class="btn btn-secondary" id="resetOrdersBtn" title="Reset sample test data">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                <span>Reset Demo</span>
+              </button>
+              <button class="btn btn-secondary" id="adminLogoutBtn" style="color:#ef4444;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Key Metrics Grid -->
+          <div class="admin-metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon-box metric-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+              </div>
+              <div class="metric-data">
+                <h4 id="metricTotalOrders">3</h4>
+                <p>Total Orders</p>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon-box metric-yellow">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="metric-data">
+                <h4 id="metricPendingOrders">1</h4>
+                <p>Pending Inquiries</p>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon-box metric-cyan">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+              </div>
+              <div class="metric-data">
+                <h4 id="metricProgressOrders">1</h4>
+                <p>In Progress</p>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon-box metric-purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              </div>
+              <div class="metric-data">
+                <h4 id="metricCompletedOrders">1</h4>
+                <p>Completed Websites</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="admin-table-controls">
+            <div class="admin-search-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="adminOrderSearch" class="form-control" placeholder="Search orders by Name, Phone, ID, or Business...">
+            </div>
+
+            <div class="admin-filter-tabs">
+              <button class="filter-tab active" data-filter="all">All Orders</button>
+              <button class="filter-tab" data-filter="pending">Pending</button>
+              <button class="filter-tab" data-filter="progress">In Progress</button>
+              <button class="filter-tab" data-filter="completed">Completed</button>
+            </div>
+          </div>
+
+          <!-- Orders Table -->
+          <div class="orders-table-wrapper">
+            <table class="orders-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Client & Contact</th>
+                  <th>Business & Website Type</th>
+                  <th>Amount & Payment</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminOrdersTableBody">
+                <tr id="emptyOrdersRow" style="display:none;">
+                  <td colspan="6" style="text-align:center; padding: 40px; color:var(--text-secondary);">
+                    No matching client orders found.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer style="background:#0f172a; padding:24px 0; border-top:1px solid var(--border-color); font-size:0.85rem; color:#94a3b8; text-align:center;">
+      <div class="container">
+        Tech Code Creations Admin Portal • Founder: <strong>KUBERAMOORTHY S</strong> (8248688471) • Kumbakonam
+      </div>
+    </footer>
+  </div>
+
+  <!-- ==========================================================================
+       OFFICIAL BILL / INVOICE DISPLAY MODAL
+       ========================================================================== -->
+  <div class="modal-overlay" id="billModal">
+    <div class="modal-content" style="max-width:880px; padding:30px;">
+      <button class="modal-close-btn no-print" onclick="closeModal('billModal')" aria-label="Close">✕</button>
+      <div id="billContentArea">
+        <!-- Rendered dynamically by generateBill() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal-overlay" id="adminOrderDetailsModal">
+    <div class="modal-content">
+      <button class="modal-close-btn" onclick="closeModal('adminOrderDetailsModal')">✕</button>
+      <div id="adminOrderDetailsContent"></div>
+    </div>
+  </div>
+
+  <!-- Manual Offline Order Modal -->
+  <div class="modal-overlay" id="manualOrderModal">
+    <div class="modal-content">
+      <button class="modal-close-btn" onclick="closeModal('manualOrderModal')">✕</button>
+      <h3 style="font-size:1.6rem; margin-bottom:6px;">Record Offline Booking</h3>
+      <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:20px;">
+        Add client inquiries taken via phone call, walk-in, or WhatsApp.
+      </p>
+
+      <form id="manualOrderForm">
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <label class="form-label">Client Name *</label>
+            <input type="text" name="manualName" class="form-control" placeholder="e.g. Anand Kumar" required>
+          </div>
+          <div>
+            <label class="form-label">Phone Number *</label>
+            <input type="tel" name="manualPhone" class="form-control" placeholder="e.g. 9840123456" required>
+          </div>
+          <div>
+            <label class="form-label">Business Name</label>
+            <input type="text" name="manualBusiness" class="form-control" placeholder="e.g. Kumbakonam Silk Emporium">
+          </div>
+          <div>
+            <label class="form-label">Website Type</label>
+            <select name="manualType" class="form-control">
+              <option value="Custom Business Website">Custom Business Website</option>
+              <option value="E-Commerce Store">E-Commerce Store</option>
+              <option value="Web Application">Web Application</option>
+              <option value="Travel Booking Portal">Travel Booking Portal</option>
+              <option value="Personal Portfolio">Personal Portfolio</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Agreed Amount (INR)</label>
+            <input type="number" name="manualAmount" class="form-control" placeholder="e.g. 20000" value="20000">
+          </div>
+          <div>
+            <label class="form-label">Internal Notes</label>
+            <textarea name="manualNotes" class="form-control" placeholder="Notes from phone conversation..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top:10px;">
+            Save Offline Order & Enable Bill
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="assets/js/main.js"></script>
+  <script>
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'techcode_orders_v2' && window.app) {
+        window.app.orders = window.app.loadOrders();
+        window.app.renderAdminOrders();
+        window.app.updateAdminMetrics();
+      }
+    });
+  </script>
+</body>
+</html>
