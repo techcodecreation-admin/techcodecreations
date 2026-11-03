@@ -29,7 +29,7 @@
    - **COMPLETED WEBSITES (PORTFOLIO)**:
      - **Andava Travels** ([www.andavatravels.in](https://www.andavatravels.in)) – Travel, Tour & Cab Booking Platform.
      - **Sri Saravana Covering** ([sri-saravana-covering.vercel.app](https://sri-saravana-covering.vercel.app)) – Modern Jewelry & E-Commerce Store.
-     - **Kuberamoorthy S Portfolio & Analysis** ([portfolio-six-beryl-88.vercel.app](http://portfolio-six-beryl-88.vercel.app/)) – MCA Student & Web Developer Portfolio.
+     - **Sri Moorthy Transport** ([srimoorthy.vercel.app](http://srimoorthy.vercel.app/)) – Packers & Movers / Transport & Logistics Platform.
    - **ABOUT US**:
      - Founder spotlight card for **KUBERAMOORTHY S**.
      - Studio address in Kumbakonam, 4-step development process, and direct contact buttons.
@@ -78,3 +78,5 @@ Then visit:
 | **Portal URL** | [http://localhost:8080/admin.html](http://localhost:8080/admin.html) or `index.html#admin` |
 | **Username** | `TechCodeCreation` |
 | **Password** | `techcode@12345` |
+
+

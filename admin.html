@@ -91,14 +91,7 @@
             </button>
           </form>
 
-          <div class="credentials-hint">
-            <div style="font-weight:700; margin-bottom:4px; color:#0f172a;">Configured Credentials:</div>
-            <div>Username: <code>TechCodeCreation</code></div>
-            <div>Password: <code>techcode@12345</code></div>
-            <button type="button" class="btn btn-secondary" id="fillDemoCredsBtn" style="padding:4px 12px; font-size:0.75rem; margin-top:8px;">
-              ⚡ Auto-Fill Credentials
-            </button>
-          </div>
+          
         </div>
 
         <!-- Dashboard View (Shown once logged in) -->
@@ -113,17 +106,15 @@
               <h1 style="font-size:2rem; margin-top:8px; color:#0f172a;">Client Orders & Bill Generator</h1>
             </div>
             <div class="admin-actions-bar">
-              <button class="btn btn-secondary" onclick="openModal('manualOrderModal')" id="btnAddManualOrder">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span>Add Offline Booking</span>
+              <button class="btn btn-primary" onclick="if(window.app){app.openManualBillModal();}else{openModal('manualOrderModal');}" id="btnAddManualOrder">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                <span>+ Create Official Bill</span>
+                <span id="nextBillNoHeaderBadge" style="font-size:0.72rem; background:rgba(255,255,255,0.22); padding:2px 7px; border-radius:6px; margin-left:4px; font-family:monospace; font-weight:700;">TCC/2026/001</span>
               </button>
+
               <button class="btn btn-secondary" id="exportCsvBtn" title="Export as CSV spreadsheet">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 <span>Export CSV</span>
-              </button>
-              <button class="btn btn-secondary" id="resetOrdersBtn" title="Reset sample test data">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-                <span>Reset Demo</span>
               </button>
               <button class="btn btn-secondary" id="adminLogoutBtn" style="color:#ef4444;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -133,13 +124,13 @@
           </div>
 
           <!-- Key Metrics Grid -->
-          <div class="admin-metrics-grid">
+          <div class="admin-metrics-grid" style="margin-bottom:18px;">
             <div class="metric-card">
               <div class="metric-icon-box metric-blue">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
               </div>
               <div class="metric-data">
-                <h4 id="metricTotalOrders">3</h4>
+                <h4 id="metricTotalOrders">0</h4>
                 <p>Total Orders</p>
               </div>
             </div>
@@ -149,7 +140,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
               </div>
               <div class="metric-data">
-                <h4 id="metricPendingOrders">1</h4>
+                <h4 id="metricPendingOrders">0</h4>
                 <p>Pending Inquiries</p>
               </div>
             </div>
@@ -159,7 +150,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
               </div>
               <div class="metric-data">
-                <h4 id="metricProgressOrders">1</h4>
+                <h4 id="metricProgressOrders">0</h4>
                 <p>In Progress</p>
               </div>
             </div>
@@ -169,8 +160,70 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
               </div>
               <div class="metric-data">
-                <h4 id="metricCompletedOrders">1</h4>
+                <h4 id="metricCompletedOrders">0</h4>
                 <p>Completed Websites</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Billing & Profit Financial Overview Grid -->
+          <div style="margin-bottom: 26px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h3 style="font-size:1.05rem; color:#0f172a; font-weight:800; display:flex; align-items:center; gap:8px;">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:#ecfdf5; color:#059669; font-size:0.95rem;">💰</span>
+                Billing &amp; Profit Financial Overview
+              </h3>
+              <span style="font-size:0.76rem; color:var(--text-secondary); background:#f1f5f9; padding:3px 8px; border-radius:6px; font-weight:600;">
+                Real-Time Profit Tracking
+              </span>
+            </div>
+            
+            <div class="admin-metrics-grid" style="margin-bottom: 0;">
+              <!-- Total Revenue Card -->
+              <div class="metric-card" style="border-left:4px solid #0284c7;">
+                <div class="metric-icon-box metric-blue">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                </div>
+                <div class="metric-data">
+                  <h4 id="metricTotalBilled" style="font-size:1.55rem; color:#0284c7;">₹0</h4>
+                  <p>Total Billed Revenue</p>
+                </div>
+              </div>
+
+              <!-- Project Expenses Card -->
+              <div class="metric-card" style="border-left:4px solid #f43f5e;">
+                <div class="metric-icon-box" style="background:#fff1f2; color:#e11d48;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"></path><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="13" x2="18" y2="18"></line><line x1="23" y1="13" x2="11" y2="13"></line></svg>
+                </div>
+                <div class="metric-data">
+                  <h4 id="metricTotalExpenses" style="font-size:1.55rem; color:#e11d48;">₹0</h4>
+                  <p>Project Costs / Expenses</p>
+                </div>
+              </div>
+
+              <!-- Net Profit Card (Featured) -->
+              <div class="metric-card" style="border-left:4px solid #10b981; background:linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+                <div class="metric-icon-box" style="background:#dcfce7; color:#15803d;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                </div>
+                <div class="metric-data">
+                  <div style="display:flex; align-items:baseline; gap:6px;">
+                    <h4 id="metricNetProfit" style="font-size:1.55rem; color:#15803d;">₹0</h4>
+                    <span id="metricProfitMarginBadge" style="font-size:0.74rem; font-weight:700; color:#15803d; background:#bbf7d0; padding:2px 6px; border-radius:6px;">0% Margin</span>
+                  </div>
+                  <p style="font-weight:700; color:#166534;">Net Calculated Profit</p>
+                </div>
+              </div>
+
+              <!-- Realized Collections Card -->
+              <div class="metric-card" style="border-left:4px solid #8b5cf6;">
+                <div class="metric-icon-box metric-purple">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="metric-data">
+                  <h4 id="metricTotalCollected" style="font-size:1.55rem; color:#6d28d9;">₹0</h4>
+                  <p>Payments Received (Paid)</p>
+                </div>
               </div>
             </div>
           </div>
@@ -196,9 +249,9 @@
               <thead>
                 <tr>
                   <th>Order ID</th>
-                  <th>Client & Contact</th>
-                  <th>Business & Website Type</th>
-                  <th>Amount & Payment</th>
+                  <th>Client &amp; Contact</th>
+                  <th>Business &amp; Website Type</th>
+                  <th>Bill &amp; Profit Amount</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -244,54 +297,412 @@
     </div>
   </div>
 
-  <!-- Manual Offline Order Modal -->
+  <!-- Official Manual Bill / Invoice Generator Modal - Real Bill System Matching Reference Image -->
   <div class="modal-overlay" id="manualOrderModal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width:920px; padding:22px; border-radius:18px; box-shadow:0 25px 60px -15px rgba(2, 132, 199, 0.35); background:#f8fafc; max-height:92vh; overflow-y:auto;">
       <button class="modal-close-btn" onclick="closeModal('manualOrderModal')">✕</button>
-      <h3 style="font-size:1.6rem; margin-bottom:6px;">Record Offline Booking</h3>
-      <p style="color:var(--text-secondary); font-size:0.88rem; margin-bottom:20px;">
-        Add client inquiries taken via phone call, walk-in, or WhatsApp.
-      </p>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding:0 6px; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:0.75rem; padding:3px 10px; background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; border-radius:12px; font-weight:800; letter-spacing:0.04em;">
+            REAL BILL DESIGN SYSTEM
+          </span>
+          <span style="font-size:0.84rem; color:#475569; font-weight:600;">
+            Create Official Bill matching the verified invoice format:
+          </span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" class="btn btn-secondary" id="autoNewBillBtn" style="font-size:0.75rem; padding:5px 12px; border-color:#cbd5e1; color:#334155; background:#ffffff;" title="Reset form and generate next sequential bill number">
+            ↻ Reset &amp; Next Bill
+          </button>
+        </div>
+      </div>
 
       <form id="manualOrderForm">
-        <div style="display:flex; flex-direction:column; gap:14px;">
-          <div>
-            <label class="form-label">Client Name *</label>
-            <input type="text" name="manualName" class="form-control" placeholder="e.g. Anand Kumar" required>
+        <div class="tcc-invoice-container" style="box-shadow:0 10px 30px rgba(0,0,0,0.06); border:2px solid #0284c7; padding:28px 30px;">
+          <!-- Top-Right Geometric Polygonal Accent -->
+          <div class="tcc-corner-decor tcc-corner-top-right">
+            <svg viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="50,0 240,0 240,140 150,140" fill="#0369a1" />
+              <polygon points="110,0 240,0 240,90" fill="#0284c7" />
+              <polygon points="175,0 240,0 240,45" fill="#38bdf8" />
+            </svg>
           </div>
-          <div>
-            <label class="form-label">Phone Number *</label>
-            <input type="tel" name="manualPhone" class="form-control" placeholder="e.g. 9840123456" required>
+
+          <!-- Bottom Geometric Polygonal Accents -->
+          <div class="tcc-corner-decor tcc-corner-bottom-left">
+            <svg viewBox="0 0 160 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="0,0 0,80 160,80" fill="#0284c7" />
+              <polygon points="0,35 0,80 100,80" fill="#38bdf8" />
+            </svg>
           </div>
-          <div>
-            <label class="form-label">Business Name</label>
-            <input type="text" name="manualBusiness" class="form-control" placeholder="e.g. Kumbakonam Silk Emporium">
+          <div class="tcc-corner-decor tcc-corner-bottom-right">
+            <svg viewBox="0 0 240 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="0,90 240,90 240,0 140,90" fill="#0284c7" />
+              <polygon points="70,90 240,90 240,30" fill="#0369a1" />
+              <polygon points="150,90 240,90 240,65" fill="#38bdf8" />
+            </svg>
           </div>
-          <div>
-            <label class="form-label">Website Type</label>
-            <select name="manualType" class="form-control">
-              <option value="Custom Business Website">Custom Business Website</option>
-              <option value="E-Commerce Store">E-Commerce Store</option>
-              <option value="Web Application">Web Application</option>
-              <option value="Travel Booking Portal">Travel Booking Portal</option>
-              <option value="Personal Portfolio">Personal Portfolio</option>
-            </select>
+
+          <!-- Header (Matching Reference Image) -->
+          <div class="tcc-invoice-header">
+            <div class="tcc-header-brand">
+              <div class="tcc-brand-logo-wrap">
+                <img src="logo.png" alt="Tech Code Creations" class="tcc-brand-logo">
+              </div>
+              <div class="tcc-brand-text">
+                <h1 class="tcc-brand-title">Tech Code</h1>
+                <div class="tcc-brand-subtitle">— Creations —</div>
+                <div class="tcc-brand-tagline">IDEAS &nbsp;|&nbsp; DESIGN &nbsp;|&nbsp; DEVELOP &nbsp;|&nbsp; GROW</div>
+              </div>
+            </div>
+
+            <div class="tcc-header-divider"></div>
+
+            <div class="tcc-header-contact">
+              <div class="tcc-contact-item">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284c7"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/></svg>
+                <span><strong>Kumbakonam, Tamil Nadu</strong></span>
+              </div>
+              <div class="tcc-contact-item">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284c7"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.41 11.41 0 0 0 3.58.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.41 11.41 0 0 0 .57 3.58 1 1 0 0 1-.25 1.02l-2.2 2.19z"/></svg>
+                <span><strong>+91 8248688471</strong></span>
+              </div>
+              <div class="tcc-contact-item">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284c7"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                <span>techcodecreations@gmail.com</span>
+              </div>
+              <div class="tcc-contact-services">Website &amp; Mobile Application Development</div>
+            </div>
           </div>
-          <div>
-            <label class="form-label">Agreed Amount (INR)</label>
-            <input type="number" name="manualAmount" class="form-control" placeholder="e.g. 20000" value="20000">
+
+          <!-- 3-Column Metadata Row (Matching Reference Image) -->
+          <div class="tcc-meta-row-grid">
+            <!-- Col 1: INVOICE pill + Bill To Card -->
+            <div class="tcc-meta-col-1">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <div class="tcc-invoice-pill-badge" style="margin-bottom:0;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                  <span>INVOICE</span>
+                </div>
+                <button type="button" id="btnAutoChangeBillNo" class="tcc-auto-btn" title="Click to auto-change to the next sequential bill number">
+                  ↻ Auto Change
+                </button>
+              </div>
+
+              <div class="tcc-inv-meta-list" style="margin-top:6px; margin-bottom:8px;">
+                <div class="tcc-inv-meta-item" style="align-items:center;">
+                  <span class="lbl" style="width:85px; font-weight:700;">Invoice No</span>
+                  <span class="colon">:</span>
+                  <div style="flex:1;">
+                    <input type="text" name="manualInvoiceNo" id="manualInvoiceNo" class="tcc-invoice-form-input" placeholder="TCC/2026/001" value="" required style="font-family:monospace; font-weight:800; color:#0369a1; background:#f0f9ff; letter-spacing:0.04em;">
+                  </div>
+                </div>
+                <div class="tcc-inv-meta-item" style="align-items:center; margin-top:4px;">
+                  <span class="lbl" style="width:85px; font-weight:700;">Date</span>
+                  <span class="colon">:</span>
+                  <div style="flex:1;">
+                    <input type="text" name="manualDate" id="manualDate" class="tcc-invoice-form-input" placeholder="DD-MM-YYYY" value="" required style="font-weight:700;">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bill To Card -->
+              <div class="tcc-billto-card">
+                <div class="tcc-billto-tab">Bill To</div>
+                <div class="tcc-billto-body" style="padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+                  <input type="text" name="manualName" id="manualName" class="tcc-invoice-form-input" placeholder="Customer / Business Name *" required style="font-weight:800; font-size:0.95rem;">
+                  <div class="tcc-client-row" style="align-items:center;">
+                    <span class="lbl" style="width:85px; font-weight:700;">Contact No</span>
+                    <span class="colon">:</span>
+                    <input type="tel" name="manualPhone" id="manualPhone" class="tcc-invoice-form-input" placeholder="+91 98424 12345 *" required style="font-weight:700;">
+                  </div>
+                  <div class="tcc-client-row" style="align-items:center;">
+                    <span class="lbl" style="width:85px; font-weight:700;">Address</span>
+                    <span class="colon">:</span>
+                    <input type="text" name="manualAddress" id="manualAddress" class="tcc-invoice-form-input" placeholder="Address (e.g. Kumbakonam, TN)" value="Kumbakonam, Tamil Nadu">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Col 2: Payment / Contact Card (Matching Reference Image) -->
+            <div class="tcc-meta-col-card">
+              <div class="tcc-card-header">Payment / Contact</div>
+              <div class="tcc-card-body tcc-payment-body">
+                <div class="tcc-person-item">
+                  <div class="tcc-round-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#0284c7"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                  </div>
+                  <strong>Kuberamoorthy</strong>
+                </div>
+                <div class="tcc-person-item">
+                  <div class="tcc-round-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#0284c7"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.41 11.41 0 0 0 3.58.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1 11.41 11.41 0 0 0 .57 3.58 1 1 0 0 1-.25 1.02l-2.2 2.19z"/></svg>
+                  </div>
+                  <strong>8248688471</strong>
+                </div>
+                <div class="tcc-queries-subtext">(For any queries / support)</div>
+              </div>
+            </div>
+
+            <!-- Col 3: Project Details Card (Matching Reference Image) -->
+            <div class="tcc-meta-col-card">
+              <div class="tcc-card-header">Project Details</div>
+              <div class="tcc-card-body tcc-project-body" style="padding:8px 10px; display:flex; flex-direction:column; gap:5px;">
+                <div class="tcc-project-row" style="align-items:center;">
+                  <span class="lbl" style="width:92px; font-weight:700;">Project Name</span>
+                  <span class="colon">:</span>
+                  <input type="text" name="manualProjectName" id="manualProjectName" class="tcc-invoice-form-input" placeholder="e.g. Corporate Website *" required style="font-weight:700;">
+                </div>
+                <div class="tcc-project-row" style="align-items:center;">
+                  <span class="lbl" style="width:92px; font-weight:700;">Project Type</span>
+                  <span class="colon">:</span>
+                  <select name="manualType" id="manualType" class="tcc-invoice-form-input" style="font-weight:700;">
+                    <option value="Website Development">Website Development</option>
+                    <option value="Mobile Application">Mobile Application</option>
+                    <option value="Custom Website Design">Custom Website Design</option>
+                    <option value="E-Commerce Store">E-Commerce Store</option>
+                    <option value="Business Website">Business Website</option>
+                    <option value="Web Application">Web Application</option>
+                    <option value="Travel Booking Portal">Travel Booking Portal</option>
+                    <option value="Commission Project">Commission Project</option>
+                    <option value="UI/UX &amp; Branding">UI/UX &amp; Branding</option>
+                  </select>
+                </div>
+                <div class="tcc-project-row" style="align-items:center;">
+                  <span class="lbl" style="width:92px; font-weight:700;">Category</span>
+                  <span class="colon">:</span>
+                  <input type="text" name="manualCategory" id="manualCategory" class="tcc-invoice-form-input" value="Web Development">
+                </div>
+                <div class="tcc-project-row" style="align-items:center;">
+                  <span class="lbl" style="width:92px; font-weight:700;">Reference</span>
+                  <span class="colon">:</span>
+                  <input type="text" name="manualReference" id="manualReference" class="tcc-invoice-form-input" value="Invoice">
+                </div>
+              </div>
+            </div>
           </div>
-          <div>
-            <label class="form-label">Internal Notes</label>
-            <textarea name="manualNotes" class="form-control" placeholder="Notes from phone conversation..."></textarea>
+
+          <!-- Itemized Description Table (Multi-Item with Add Item Support) -->
+          <div class="tcc-table-wrapper" style="margin:14px 0 16px 0;">
+            <table class="tcc-items-table" id="manualBillItemsTable">
+              <thead>
+                <tr>
+                  <th class="th-sno" style="width:48px;">S.No</th>
+                  <th class="th-desc">Description</th>
+                  <th class="th-amount" style="width:160px;">Amount (Rs.)</th>
+                  <th class="th-action" style="width:48px; text-align:center;">Action</th>
+                </tr>
+              </thead>
+              <tbody id="manualBillItemsBody">
+                <tr class="manual-item-row" data-index="1">
+                  <td class="td-sno">1</td>
+                  <td class="td-desc">
+                    <input type="text" name="manualDescription" id="manualDescription" class="tcc-invoice-form-input item-desc-input" placeholder="Service description (e.g. Website Development Service)" style="font-weight:800; font-size:0.95rem; margin-bottom:4px;">
+                    <input type="text" name="manualSubDescription" id="manualSubDescription" class="tcc-invoice-form-input item-subdesc-input" placeholder="Sub-description (e.g. Client Name – Project Name)" style="font-size:0.8rem; color:#475569;">
+                  </td>
+                  <td class="td-amount">
+                    <input type="number" name="manualAmount" id="manualAmount" class="tcc-invoice-form-input item-amount-input" placeholder="25000" min="0" step="any" required style="font-size:1.15rem; font-weight:900; color:#0f172a; text-align:right;">
+                  </td>
+                  <td class="td-action" style="text-align:center;">
+                    <button type="button" class="btn-remove-item" onclick="app.removeBillItemRow(this)" title="Delete this item" disabled style="opacity:0.35; cursor:default;">✕</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Add Item Button & Info -->
+            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+              <button type="button" id="btnAddBillItem" class="btn btn-secondary btn-sm" onclick="app.addBillItemRow()" style="background:#eff6ff; border-color:#93c5fd; color:#0284c7; font-weight:800; padding:8px 16px; border-radius:8px; display:inline-flex; align-items:center; gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>+ Add Item / Other Description</span>
+              </button>
+              <div style="font-size:0.82rem; color:#64748b;">
+                Add multiple services, features, or custom descriptions to this bill.
+              </div>
+            </div>
           </div>
-          <button type="submit" class="btn btn-primary" style="margin-top:10px;">
-            Save Offline Order & Enable Bill
+
+          <!-- Words & Totals Box (Matching Reference Image) -->
+          <div class="tcc-words-totals-grid" style="margin-bottom:14px;">
+            <!-- Left: Amount in Words & Terms -->
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div class="tcc-words-box" style="padding:10px 14px;">
+                <div class="tcc-wallet-icon">
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="#0284c7"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                </div>
+                <div class="tcc-words-content" style="flex:1;">
+                  <div class="tcc-words-title">Amount in Words :</div>
+                  <div id="liveAmountInWords" style="font-size:0.96rem; font-weight:800; color:#0f172a; font-style:italic;">Zero Rupees Only</div>
+                </div>
+              </div>
+
+              <!-- Terms & Conditions Textarea -->
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px;">
+                <div class="tcc-terms-title" style="margin-bottom:4px; font-size:0.84rem;">Terms &amp; Conditions</div>
+                <textarea name="manualTerms" id="manualTerms" class="tcc-invoice-form-input" rows="3" style="font-size:0.78rem; line-height:1.45; resize:none;">Payment to be made within 7 days from the date of invoice.
+This is a commission / service project.
+For any queries / support contact +91 8248688471.</textarea>
+              </div>
+            </div>
+
+            <!-- Right: Totals with Net Amount Banner -->
+            <div class="tcc-totals-box">
+              <div class="tcc-total-line">
+                <span class="lbl">Total Amount</span>
+                <span class="colon">:</span>
+                <span class="val" id="liveTotalDisplay" style="font-weight:800;">₹ 0.00</span>
+              </div>
+              <div class="tcc-total-line" style="background:#ffffff; border-top:1px solid #e0f2fe; border-bottom:1px solid #e0f2fe;">
+                <span class="lbl">Less Discount (₹)</span>
+                <span class="colon">:</span>
+                <input type="number" name="manualDiscount" id="manualDiscount" class="tcc-invoice-form-input" value="0" min="0" step="any" style="width:115px; text-align:right; font-weight:700;">
+              </div>
+              <div class="tcc-net-amount-banner">
+                <span class="lbl">Net Amount</span>
+                <span class="colon">:</span>
+                <span class="val" id="liveNetAmount">₹ 0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: QR Code & Seal / Signature -->
+          <div class="tcc-bottom-grid">
+            <div style="font-size:0.78rem; color:#64748b; line-height:1.5;">
+              <strong style="color:#0284c7;">Tech Code Creations Official Bill</strong><br>
+              Auto-generated bill number with scannable QR Code and verified digital stamp.
+            </div>
+
+            <!-- QR Code Display (Replaces Barcode) -->
+            <div class="tcc-qrcode-col">
+              <div class="tcc-qrcode-wrap" title="Scan QR Code to pay via UPI or verify bill" onclick="app.showQrModal('sample')">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=2&data=upi%3A%2F%2Fpay%3Fpa%3D8248688471%40upi%26pn%3DTechCodeCreations%26cu%3DINR" 
+                     alt="UPI QR Code - Tech Code Creations" 
+                     class="tcc-qr-img" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <!-- Offline High-Definition SVG QR Fallback -->
+                <svg class="tcc-qr-svg" style="display:none;" viewBox="0 0 100 100" fill="#0f172a" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="4" width="28" height="28" rx="3" fill="none" stroke="#0284c7" stroke-width="4" />
+                  <rect x="11" y="11" width="14" height="14" rx="1.5" fill="#0284c7" />
+                  <rect x="68" y="4" width="28" height="28" rx="3" fill="none" stroke="#0284c7" stroke-width="4" />
+                  <rect x="75" y="11" width="14" height="14" rx="1.5" fill="#0284c7" />
+                  <rect x="4" y="68" width="28" height="28" rx="3" fill="none" stroke="#0284c7" stroke-width="4" />
+                  <rect x="11" y="75" width="14" height="14" rx="1.5" fill="#0284c7" />
+                  <rect x="36" y="8" width="4" height="4" fill="#0369a1"/>
+                  <rect x="44" y="8" width="4" height="4" fill="#0369a1"/>
+                  <rect x="52" y="8" width="4" height="4" fill="#0369a1"/>
+                  <rect x="60" y="8" width="4" height="4" fill="#0369a1"/>
+                  <rect x="8" y="36" width="4" height="4" fill="#0369a1"/>
+                  <rect x="8" y="44" width="4" height="4" fill="#0369a1"/>
+                  <rect x="8" y="52" width="4" height="4" fill="#0369a1"/>
+                  <rect x="8" y="60" width="4" height="4" fill="#0369a1"/>
+                  <rect x="68" y="68" width="14" height="14" rx="2" fill="none" stroke="#0284c7" stroke-width="3" />
+                  <rect x="73" y="73" width="4" height="4" fill="#0284c7" />
+                  <rect x="36" y="20" width="8" height="4" fill="#0f172a"/>
+                  <rect x="48" y="20" width="4" height="8" fill="#0f172a"/>
+                  <rect x="56" y="20" width="6" height="4" fill="#0f172a"/>
+                  <rect x="36" y="36" width="12" height="12" rx="2" fill="#0284c7"/>
+                  <rect x="52" y="36" width="4" height="4" fill="#0f172a"/>
+                  <rect x="60" y="36" width="8" height="4" fill="#0f172a"/>
+                  <rect x="52" y="44" width="8" height="8" fill="#0f172a"/>
+                  <rect x="64" y="44" width="4" height="8" fill="#0f172a"/>
+                  <rect x="36" y="52" width="6" height="6" fill="#0f172a"/>
+                  <rect x="46" y="52" width="4" height="8" fill="#0f172a"/>
+                  <rect x="54" y="56" width="8" height="4" fill="#0f172a"/>
+                  <rect x="36" y="64" width="4" height="8" fill="#0f172a"/>
+                  <rect x="44" y="68" width="8" height="4" fill="#0f172a"/>
+                  <rect x="56" y="64" width="6" height="8" fill="#0f172a"/>
+                  <rect x="36" y="76" width="8" height="4" fill="#0f172a"/>
+                  <rect x="48" y="76" width="4" height="8" fill="#0f172a"/>
+                  <rect x="36" y="84" width="14" height="4" fill="#0f172a"/>
+                  <rect x="54" y="84" width="8" height="4" fill="#0f172a"/>
+                  <rect x="86" y="36" width="4" height="8" fill="#0f172a"/>
+                  <rect x="74" y="48" width="8" height="4" fill="#0f172a"/>
+                  <rect x="86" y="52" width="4" height="10" fill="#0f172a"/>
+                </svg>
+                <div class="tcc-qr-scan-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                  <span>SCAN TO PAY (UPI)</span>
+                </div>
+                <div class="tcc-qr-upi-info">UPI ID: <strong>kuberamoorthy01-1@okhdfcbank</strong></div>
+              </div>
+            </div>
+
+            <!-- Signature & Seal -->
+            <div class="tcc-sign-seal-section">
+              <div class="tcc-for-title">For Tech Code Creations</div>
+              <div class="tcc-sign-seal-flex">
+                <div class="tcc-signature-wrap">
+                  <img src="signature.png" alt="Authorized Signature" class="tcc-signature-img">
+                  <div class="tcc-sign-line-rule"></div>
+                  <div class="tcc-authorized-sign-text">Authorized Signature</div>
+                </div>
+
+                <div class="tcc-seal-stamp-wrap">
+                  <svg class="tcc-seal-svg" viewBox="0 0 120 120" width="85" height="85" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="60" cy="60" r="56" fill="#f8fafc" stroke="#0284c7" stroke-width="2.5" />
+                    <circle cx="60" cy="60" r="49" fill="none" stroke="#0284c7" stroke-width="1.2" stroke-dasharray="3,2" />
+                    <circle cx="60" cy="60" r="45" fill="#ffffff" stroke="#0284c7" stroke-width="1.5" />
+                    <defs>
+                      <path id="sealTopArcForm" d="M 22,60 A 38,38 0 0,1 98,60" fill="none" />
+                      <path id="sealBottomArcForm" d="M 98,60 A 38,38 0 0,1 22,60" fill="none" />
+                    </defs>
+                    <text font-family="'Segoe UI', Roboto, sans-serif" font-size="8.2" font-weight="800" fill="#0284c7" letter-spacing="1.2">
+                      <textPath href="#sealTopArcForm" startOffset="50%" text-anchor="middle">
+                        ★ TECH CODE CREATIONS ★
+                      </textPath>
+                    </text>
+                    <text font-family="'Segoe UI', Roboto, sans-serif" font-size="8.5" font-weight="800" fill="#0284c7" letter-spacing="2">
+                      <textPath href="#sealBottomArcForm" startOffset="50%" text-anchor="middle">
+                        KUMBAKONAM
+                      </textPath>
+                    </text>
+                    <g transform="translate(42, 42) scale(0.6)">
+                      <rect x="0" y="0" width="60" height="60" rx="8" fill="#e0f2fe" opacity="0.6"/>
+                      <path d="M12 18 H48 V26 H34 V48 H26 V26 H12 Z" fill="#0284c7"/>
+                      <rect x="42" y="10" width="6" height="6" fill="#38bdf8"/>
+                      <rect x="50" y="16" width="6" height="6" fill="#0369a1"/>
+                      <rect x="44" y="24" width="5" height="5" fill="#38bdf8"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div style="margin-top:14px;">
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; font-size:1.1rem; font-weight:800; justify-content:center; border-radius:10px; box-shadow:0 12px 28px -5px rgba(2, 132, 199, 0.45);">
+            📄 Create Official Bill &amp; Show Invoice
           </button>
         </div>
       </form>
     </div>
   </div>
+
+
+  <!-- Official Bill QR Code Verification Modal -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal-content" style="max-width:500px; padding:28px; border-radius:18px; box-shadow:0 25px 50px -12px rgba(15, 23, 42, 0.25);">
+      <button class="modal-close-btn" onclick="closeModal('qrModal')">✕</button>
+      
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
+        <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg, #0284c7, #2563eb); display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.2rem;">
+          📱
+        </div>
+        <div>
+          <h3 style="font-size:1.3rem; color:#0f172a; margin:0; font-weight:800;">Official Bill QR Code &amp; UPI</h3>
+          <p style="color:var(--text-secondary); font-size:0.84rem; margin:0; margin-top:2px;">Scan with Google Pay, PhonePe, Paytm, or any UPI app to pay</p>
+        </div>
+      </div>
+
+      <div id="qrModalContent"></div>
+    </div>
+  </div>
+
+
 
   <div id="toastContainer" class="toast-container"></div>
 
