@@ -66,7 +66,7 @@
         <!-- Contact Details Card -->
         <div class="contact-info-card">
           <div>
-            <h2 style="font-size:2rem; margin-bottom:8px;">Let's Talk About Your Project</h2>
+            <h2 class="contact-card-title">Let's Talk About Your Project</h2>
             <p style="color:var(--text-secondary);">Your Vision • Our Code • Your Website</p>
 
             <div class="contact-methods">
@@ -77,7 +77,7 @@
                 </div>
                 <div>
                   <h4 style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">Direct Phone & WhatsApp</h4>
-                  <p><a href="tel:8248688471" style="font-size:1.3rem; font-weight:900; color:var(--primary-blue);">8248688471</a></p>
+                  <p><a href="tel:8248688471" style="font-size:1.3rem; font-weight:900; color:var(--primary-blue); word-break:break-all;">8248688471</a></p>
                   <p style="font-size:0.85rem; color:var(--text-secondary);">Contact Person: <strong>KUBERAMOORTHY S</strong></p>
                 </div>
               </div>
@@ -89,7 +89,7 @@
                 </div>
                 <div>
                   <h4 style="font-size:1.1rem; font-weight:700; margin-bottom:4px;">Studio Address</h4>
-                  <p style="font-weight:600; color:#0f172a; font-size:1rem;">85/A Seenivasa nagar, sakkottai post, kumbakonam</p>
+                  <p style="font-weight:600; color:#0f172a; font-size:1rem; word-break:break-word;">85/A Seenivasa nagar, sakkottai post, kumbakonam</p>
                   <p style="font-size:0.85rem; color:var(--text-secondary);">Thanjavur District, Tamil Nadu - 612401</p>
                 </div>
               </div>
@@ -108,21 +108,23 @@
             </div>
           </div>
 
-          <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="contact-action-buttons">
             <!-- Call Button with Phone Logo -->
-            <a href="tel:8248688471" class="btn btn-primary" style="width:100%; font-size:1rem; padding:14px;">
+            <a href="tel:8248688471" class="btn btn-primary btn-contact-action" id="contactCallBtn">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.44-5.15-3.75-6.59-6.59l1.97-1.57c.28-.28.36-.67.25-1.02A11.36 11.36 0 019 4.31c0-.56-.45-1-1-1H4.5c-.55 0-1 .45-1 1C3.5 13.04 10.96 20.5 20.01 20.5c.55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
-              <span>Call Kuberamoorthy Directly (8248688471)</span>
+              <span class="btn-text-full">Call Kuberamoorthy Directly (8248688471)</span>
+              <span class="btn-text-short">Call: 8248688471</span>
             </a>
 
             <!-- WhatsApp Button with Official WhatsApp Logo -->
             <a href="https://wa.me/918248688471?text=Hello%20Kuberamoorthy%2C%20I%20would%20like%20to%20build%20a%20website%20with%20Tech%20Code%20Creations." 
                target="_blank" 
                rel="noopener noreferrer" 
-               class="btn btn-primary" 
-               style="width:100%; background:#25d366; font-size:1rem; padding:14px; box-shadow:0 4px 16px rgba(37,211,102,0.35); border:none;">
+               class="btn btn-primary btn-contact-action btn-contact-wa"
+               id="contactWaBtn">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              <span>Chat on WhatsApp Directly (8248688471)</span>
+              <span class="btn-text-full">Chat on WhatsApp Directly (8248688471)</span>
+              <span class="btn-text-short">WhatsApp: 8248688471</span>
             </a>
           </div>
         </div>
@@ -143,13 +145,14 @@
 
           <form id="contactForm">
             <h4 style="font-size:1.1rem; margin-bottom:12px;">Send an Instant Message</h4>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div class="contact-form-row">
               <input type="text" name="name" class="form-control" placeholder="Your Name" required>
               <input type="tel" name="phone" class="form-control" placeholder="Phone Number" required>
             </div>
             <textarea name="message" class="form-control" style="min-height:90px; margin-bottom:14px;" placeholder="Tell us about your website requirements..." required></textarea>
-            <button type="submit" class="btn btn-primary" style="width:100%;">
-              <span>Send Message to Kuberamoorthy</span>
+            <button type="submit" class="btn btn-primary contact-submit-btn">
+              <span class="btn-text-full">Send Message to Kuberamoorthy</span>
+              <span class="btn-text-short">Send Message</span>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
             </button>
           </form>

@@ -116,11 +116,17 @@ class TechCodeApp {
     const mobileBtn = document.getElementById("mobileMenuBtn");
     const navMenu = document.getElementById("navMenu");
     if (mobileBtn && navMenu) {
-      mobileBtn.addEventListener("click", () => {
+      mobileBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         navMenu.classList.toggle("mobile-open");
       });
       navMenu.querySelectorAll(".nav-link").forEach(link => {
         link.addEventListener("click", () => navMenu.classList.remove("mobile-open"));
+      });
+      document.addEventListener("click", (e) => {
+        if (!navMenu.contains(e.target) && !mobileBtn.contains(e.target) && navMenu.classList.contains("mobile-open")) {
+          navMenu.classList.remove("mobile-open");
+        }
       });
     }
 
