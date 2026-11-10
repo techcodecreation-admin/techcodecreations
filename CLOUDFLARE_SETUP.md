@@ -2,54 +2,61 @@
 
 **Account:** `techcodecreations@gmail.com`  
 **Database Name:** `techcodecreations-db`  
-**API Service:** `techcodecreations-api`
+**Worker API Name:** `techcodecreations-api`
+
+> 💡 **NO TERMINAL OR NODE.JS REQUIRED!**  
+> You can complete this entire setup inside your web browser at [dash.cloudflare.com](https://dash.cloudflare.com) in **under 2 minutes**!
 
 ---
 
-## 🚀 How to Connect Cloudflare Database
+## 🚀 4 Simple Steps in Cloudflare Dashboard (Browser Only)
 
-### Step 1: Login to Cloudflare
-Go to [dash.cloudflare.com](https://dash.cloudflare.com) and login with:
-- **Email:** `techcodecreations@gmail.com`
-
----
-
-### Step 2: Create the D1 Database in Cloudflare Dashboard
-1. In Cloudflare Dashboard, go to **Storage & Databases** > **D1 SQL Database**.
-2. Click **Create Database**.
-3. Name it: `techcodecreations-db`.
-4. Click **Create**.
-5. Copy the generated **Database ID** (UUID).
-6. Open `wrangler.toml` in your project folder and replace `database_id = "..."` with your actual Database ID.
+### Step 1: Create the D1 Database
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com) and log in with **`techcodecreations@gmail.com`**.
+2. In the left sidebar, click **Storage & Databases** > **D1 SQL Database**.
+3. Click **Create Database**.
+4. Database name: **`techcodecreations-db`**.
+5. Click **Create**.
 
 ---
 
-### Step 3: Run the Schema Migration (Create Tables)
-In Cloudflare Dashboard:
-1. Click on your `techcodecreations-db` database.
-2. Go to the **Console** tab.
-3. Paste the contents of `schema.sql` and click **Execute**.
-4. The `orders`, `bill_sequences`, and `inquiries` tables are now live!
+### Step 2: Create the Database Tables (Run SQL Schema)
+1. On your newly created `techcodecreations-db` page, click the **Console** tab at the top.
+2. Open `schema.sql` (or click **Copy schema.sql Code** in your Admin Portal).
+3. Paste the SQL code into the Cloudflare console box and click **Execute**.
+4. ✅ All tables (`orders`, `bill_sequences`, `inquiries`) are now created!
 
 ---
 
-### Step 4: Deploy the Cloudflare Worker API
-In PowerShell or Terminal (once Node.js / Wrangler is installed):
-```bash
-npx wrangler login
-# Select techcodecreations@gmail.com in the browser
-npx wrangler deploy
-```
-
-Once deployed, Cloudflare gives you an API URL, for example:
-`https://techcodecreations-api.<your-subdomain>.workers.dev`
+### Step 3: Create the Cloudflare Worker API
+1. In the left sidebar, click **Workers & Pages**.
+2. Click **Create Application** (or **Create**) > select **Worker**.
+3. Name it: **`techcodecreations-api`**.
+4. Click **Deploy**.
+5. On the success screen, click **Edit code** (this opens Cloudflare's online code editor in your browser).
+6. Delete the starter code, copy & paste the contents of `worker.js` (or click **Copy worker.js Code** in Admin Portal).
+7. Click the blue **Deploy** button in the top right.
 
 ---
 
-### Step 5: Connect inside the Admin Portal
-1. Open [http://localhost:8080/admin.html](http://localhost:8080/admin.html) or your live admin page.
-2. Click the **Cloudflare DB** button in the header.
-3. Enter your Cloudflare Worker URL or click **Test Connection**.
-4. Click **Sync All Orders to Cloudflare DB**.
-5. All client orders, bookings, and official invoices will now synchronize automatically across all devices!
+### Step 4: Connect the Database to your Worker
+1. Go back to your Worker dashboard page for `techcodecreations-api`.
+2. Click the **Settings** tab.
+3. Click **Bindings** (or **Variables and Secrets** > **Bindings**).
+4. Click **Add** > select **D1 Database**.
+5. Set:
+   - **Variable name:** `DB` *(must be exactly uppercase `DB`)*
+   - **D1 database:** select `techcodecreations-db`
+6. Click **Save and Deploy**.
+7. Copy your Worker URL from the top of the page (e.g. `https://techcodecreations-api.<your-subdomain>.workers.dev`).
 
+---
+
+## 🔗 Step 5: Connect in Tech Code Creations Admin Portal
+
+1. Open your admin portal: [http://localhost:8080/admin.html](http://localhost:8080/admin.html)
+2. In the top header bar, click the **Cloudflare DB** button.
+3. Paste your Worker URL in the box.
+4. Click **Save & Connect**.
+5. Click **Sync Local Orders to Cloudflare**.
+6. ✅ **All your client bookings, orders, and official bills will now sync to the cloud automatically!**

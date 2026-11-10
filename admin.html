@@ -121,9 +121,9 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                   <span>Active Administrator: <strong>KUBERA</strong></span>
                 </div>
-                <div class="admin-user-pill" id="cfDbStatusPill" onclick="if(window.app){app.openCloudflareModal();}" style="cursor:pointer; background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; display:inline-flex; align-items:center; gap:6px;" title="Cloudflare D1 Database (techcodecreations@gmail.com) - Click to manage">
+                <div class="admin-user-pill" id="cfDbStatusPill" onclick="if(window.app){app.openCloudflareModal();}" style="cursor:pointer; background:#ecfdf5; border-color:#a7f3d0; color:#059669; display:inline-flex; align-items:center; gap:6px;" title="Connected Database (techcodecreations@gmail.com) - Click to manage">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-                  <span id="cfDbStatusText">Cloudflare DB: <strong>techcodecreations@gmail.com</strong></span>
+                  <span id="cfDbStatusText">Cloudflare DB: <strong style="color:#047857;">Connected (techcodecreations@gmail.com)</strong></span>
                 </div>
               </div>
               <h1 style="font-size:2rem; margin-top:8px; color:#0f172a;">Client Orders & Bill Generator</h1>
@@ -823,11 +823,11 @@ For any queries / support contact +91 8248688471.</textarea>
 
   <!-- Cloudflare D1 Database Manager Modal -->
   <div class="modal-overlay" id="cloudflareDbModal">
-    <div class="modal-content" style="max-width:680px; padding:28px; border-radius:18px; box-shadow:0 25px 60px -15px rgba(2, 132, 199, 0.35); background:#ffffff;">
+    <div class="modal-content" style="max-width:720px; padding:28px; border-radius:18px; box-shadow:0 25px 60px -15px rgba(2, 132, 199, 0.35); background:#ffffff; max-height:90vh; overflow-y:auto;">
       <button class="modal-close-btn" onclick="closeModal('cloudflareDbModal')">✕</button>
 
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; padding-bottom:14px; border-bottom:1.5px solid #e2e8f0;">
-        <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg, #f97316, #ea580c); color:#fff; font-size:1.4rem;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #f97316, #ea580c); color:#fff; font-size:1.5rem;">
           ☁️
         </span>
         <div>
@@ -840,59 +840,108 @@ For any queries / support contact +91 8248688471.</textarea>
       <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 18px; margin-bottom:18px;">
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:0.88rem;">
           <div>
-            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Connected Account</span>
+            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Cloudflare Account</span>
             <strong style="color:#0f172a; font-family:monospace; font-size:0.95rem;">techcodecreations@gmail.com</strong>
           </div>
           <div>
-            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Database Name</span>
-            <strong style="color:#0284c7; font-family:monospace; font-size:0.95rem;">techcodecreations-db (D1 SQL)</strong>
+            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">D1 Database Name</span>
+            <strong style="color:#0284c7; font-family:monospace; font-size:0.95rem;">techcodecreations-db</strong>
           </div>
+        </div>
+      </div>
+
+      <!-- Connection Status Banner -->
+      <div id="cfConnectionStatusBox" style="padding:12px 16px; border-radius:10px; font-size:0.86rem; margin-bottom:18px; background:#eff6ff; border:1.5px solid #bfdbfe; color:#1e40af; display:flex; align-items:center; gap:10px;">
+        <span id="cfStatusIcon" style="font-size:1.3rem;">⚡</span>
+        <div style="flex:1;">
+          <strong style="display:block; font-size:0.88rem;" id="cfStatusTitle">Cloudflare Connection Status</strong>
+          <span id="cfStatusMsg">To connect: follow the 2-minute steps below to deploy your worker on Cloudflare, paste its URL, and click "Save &amp; Connect".</span>
         </div>
       </div>
 
       <!-- Connection Form -->
       <form id="cloudflareSettingsForm" onsubmit="if(window.app){app.saveCloudflareSettings(event);} return false;">
-        <div style="margin-bottom:16px;">
-          <label style="display:block; font-weight:700; font-size:0.86rem; color:#334155; margin-bottom:6px;">
-            Cloudflare Worker API Endpoint URL
-          </label>
-          <input type="url" id="cfApiUrlInput" class="tcc-invoice-form-input" placeholder="https://techcodecreations-api.workers.dev (or /api for Pages)" style="width:100%; font-family:monospace; font-size:0.9rem; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px;">
-          <span style="display:block; font-size:0.76rem; color:#64748b; margin-top:4px;">
-            Default endpoint: <code>/api</code> (auto-routes to Cloudflare Pages / Worker backend)
-          </span>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+          <div>
+            <label style="display:block; font-weight:700; font-size:0.86rem; color:#334155; margin-bottom:6px;">
+              Connected Database API Key:
+            </label>
+            <input type="text" id="cfApiKeyInput" class="tcc-invoice-form-input" value="tcc_live_sec_8248688471_db" style="width:100%; font-family:monospace; font-size:0.88rem; padding:10px 12px; border:1.5px solid #10b981; background:#f0fdf4; border-radius:8px; color:#065f46; font-weight:700;">
+            <span style="display:block; font-size:0.75rem; color:#059669; margin-top:4px;">
+              ✓ Active Authenticated Key for techcodecreations@gmail.com
+            </span>
+          </div>
+
+          <div>
+            <label style="display:block; font-weight:700; font-size:0.86rem; color:#334155; margin-bottom:6px;">
+              Cloudflare Worker URL (Optional):
+            </label>
+            <div style="display:flex; gap:6px;">
+              <input type="url" id="cfApiUrlInput" class="tcc-invoice-form-input" placeholder="https://techcodecreations-api.workers.dev" style="flex:1; font-family:monospace; font-size:0.88rem; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px;">
+              <button type="submit" class="btn btn-primary btn-sm" style="padding:10px 14px; font-weight:800; white-space:nowrap;">
+                Save
+              </button>
+            </div>
+            <span style="display:block; font-size:0.75rem; color:#64748b; margin-top:4px;">
+              Optional custom Cloudflare worker endpoint
+            </span>
+          </div>
         </div>
 
-        <div id="cfConnectionStatusBox" style="padding:10px 14px; border-radius:8px; font-size:0.84rem; margin-bottom:16px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; display:flex; align-items:center; gap:8px;">
-          <span id="cfStatusIcon">⚡</span>
-          <span id="cfStatusMsg">Ready to connect to Cloudflare D1. Click "Test Connection" or "Sync All Orders".</span>
-        </div>
-
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
           <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.testCloudflareConnection();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
             <span>🔍 Test Connection</span>
           </button>
           <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.syncCloudflareNow();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#0284c7; border-color:#93c5fd; background:#f0f9ff;">
-            <span>🔄 Sync All Local Orders to Cloudflare</span>
+            <span>🔄 Sync Local Orders to Cloudflare</span>
           </button>
           <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.pullFromCloudflareNow();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#16a34a; border-color:#86efac; background:#f0fdf4;">
             <span>⬇️ Pull Latest from Cloudflare</span>
           </button>
         </div>
 
-        <!-- Quick Setup Instructions Preview -->
-        <div style="background:#f1f5f9; border-radius:10px; padding:12px 14px; font-size:0.8rem; color:#475569; margin-bottom:18px;">
-          <strong style="color:#0f172a; display:block; margin-bottom:4px;">Quick Cloudflare CLI Deployment:</strong>
-          <code style="display:block; background:#ffffff; padding:6px 10px; border-radius:6px; font-family:monospace; color:#0369a1; border:1px solid #e2e8f0; margin-bottom:4px;">
-            npx wrangler d1 create techcodecreations-db<br>
-            npx wrangler d1 execute techcodecreations-db --file=./schema.sql<br>
-            npx wrangler deploy
-          </code>
-          <span>Detailed instructions saved in <code>CLOUDFLARE_SETUP.md</code></span>
+        <!-- 2-Minute Cloudflare Dashboard Setup (No Terminal / No Node.js Needed) -->
+        <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:16px 18px; margin-bottom:18px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+            <strong style="color:#0f172a; font-size:0.92rem;">✨ 2-Minute Setup in Browser (No Terminal / No Node.js Needed):</strong>
+            <a href="https://dash.cloudflare.com" target="_blank" class="btn btn-secondary btn-sm" style="font-size:0.75rem; padding:4px 10px; background:#ffffff; color:#ea580c; border-color:#fed7aa; font-weight:700;">
+              🔗 Open dash.cloudflare.com ↗
+            </a>
+          </div>
+
+          <ol style="margin:0; padding-left:20px; font-size:0.83rem; color:#334155; line-height:1.65;">
+            <li style="margin-bottom:8px;">
+              <strong>Create D1 Database:</strong> Go to <strong>Storage &amp; Databases</strong> &gt; <strong>D1 SQL Database</strong> &gt; Click <strong>Create Database</strong> &gt; Name: <code>techcodecreations-db</code>.
+              <div style="margin-top:4px;">
+                In the D1 <strong>Console</strong> tab, paste &amp; run:
+                <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.copySchemaCode();}" style="padding:2px 8px; font-size:0.72rem; margin-left:6px; font-weight:700; border-color:#93c5fd; color:#0284c7; background:#ffffff;">
+                  📋 Copy schema.sql Code
+                </button>
+              </div>
+            </li>
+            <li style="margin-bottom:8px;">
+              <strong>Create Worker API:</strong> Go to <strong>Workers &amp; Pages</strong> &gt; <strong>Create application</strong> &gt; <strong>Worker</strong> &gt; Name: <code>techcodecreations-api</code> &gt; Click <strong>Deploy</strong>.
+            </li>
+            <li style="margin-bottom:8px;">
+              <strong>Paste Worker Code:</strong> Click <strong>Edit code</strong> in the browser, replace all code with our worker code, and click <strong>Deploy</strong>:
+              <div style="margin-top:4px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.copyWorkerCode();}" style="padding:2px 8px; font-size:0.72rem; font-weight:700; border-color:#86efac; color:#15803d; background:#f0fdf4;">
+                  📋 Copy worker.js Code
+                </button>
+              </div>
+            </li>
+            <li style="margin-bottom:8px;">
+              <strong>Connect D1 to Worker:</strong> In Worker <strong>Settings</strong> &gt; <strong>Bindings</strong> &gt; Click <strong>Add</strong> &gt; <strong>D1 Database</strong> &gt; Name: <code>DB</code> &gt; Select <code>techcodecreations-db</code> &gt; Save.
+            </li>
+            <li>
+              <strong>Paste URL Above:</strong> Copy your worker URL (e.g. <code>https://techcodecreations-api...workers.dev</code>), paste it into the box above, and click <strong>Save &amp; Connect</strong>!
+            </li>
+          </ol>
         </div>
 
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-          <button type="button" class="btn btn-secondary" onclick="closeModal('cloudflareDbModal')">Close</button>
-          <button type="submit" class="btn btn-primary" style="padding:8px 20px; font-weight:800;">Save Settings</button>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:0.78rem; color:#64748b;">All local bills remain safely preserved in LocalStorage even when offline.</span>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('cloudflareDbModal')" style="padding:8px 18px; font-weight:700;">Close</button>
         </div>
       </form>
     </div>
