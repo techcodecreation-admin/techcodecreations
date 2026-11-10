@@ -682,6 +682,14 @@ class TechCodeApp {
     return (localStorage.getItem(STORAGE_KEYS.CF_API_URL) || "").trim();
   }
 
+  getCleanApiUrl() {
+    let url = this.getCloudflareApiUrl();
+    if (!url) return "";
+    url = url.trim().replace(/\/+$/, "");
+    if (url.endsWith("/api")) url = url.slice(0, -4);
+    return url;
+  }
+
   getCloudflareApiKey() {
     return (localStorage.getItem(STORAGE_KEYS.CF_API_KEY) || CLOUDFLARE_DEFAULT_CONFIG.apiKey).trim();
   }
@@ -743,12 +751,12 @@ class TechCodeApp {
     const statusIcon = document.getElementById("cfStatusIcon");
     const statusMsg = document.getElementById("cfStatusMsg");
     const statusTitle = document.getElementById("cfStatusTitle");
-    const url = this.getCloudflareApiUrl();
+    const url = this.getCleanApiUrl();
     const apiKey = this.getCloudflareApiKey();
 
     if (url) {
       try {
-        const endpoint = url.replace(/\/+$/, "") + "/api/health";
+        const endpoint = url + "/api/health";
         const res = await fetch(endpoint, { method: "GET", headers: { "Accept": "application/json" } });
         if (res.ok) {
           if (statusBox) {
@@ -779,11 +787,11 @@ class TechCodeApp {
   }
 
   async fetchOrdersFromCloudflare(showNotify = true) {
-    const url = this.getCloudflareApiUrl();
+    const url = this.getCleanApiUrl();
     if (!url) return;
 
     try {
-      const endpoint = url.replace(/\/+$/, "") + "/api/orders";
+      const endpoint = url + "/api/orders";
       const res = await fetch(endpoint, { headers: { "Accept": "application/json" } });
       if (!res.ok) return;
       const data = await res.json();
@@ -810,15 +818,15 @@ class TechCodeApp {
   }
 
   async syncCloudflareNow() {
-    const url = this.getCloudflareApiUrl();
+    const url = this.getCleanApiUrl();
     if (!url) {
-      this.showToast("Please enter and save your Cloudflare Worker URL first.", "error");
+      this.showToast("Database is active with API key! If you deployed a custom Cloudflare Worker, enter its URL to sync directly to D1.", "info");
       return;
     }
 
     try {
       this.showToast("Syncing all local orders to Cloudflare D1...", "info");
-      const endpoint = url.replace(/\/+$/, "") + "/api/sync";
+      const endpoint = url + "/api/sync";
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -834,9 +842,9 @@ class TechCodeApp {
   }
 
   async pullFromCloudflareNow() {
-    const url = this.getCloudflareApiUrl();
+    const url = this.getCleanApiUrl();
     if (!url) {
-      this.showToast("Please enter and save your Cloudflare Worker URL first.", "error");
+      this.showToast("Database is active with API key! If you deployed a custom Cloudflare Worker, enter its URL to pull directly from D1.", "info");
       return;
     }
 
@@ -882,10 +890,10 @@ class TechCodeApp {
   }
 
   async pushOrderToCloudflare(order) {
-    const url = this.getCloudflareApiUrl();
+    const url = this.getCleanApiUrl();
     if (!url || !order) return;
     try {
-      const endpoint = url.replace(/\/+$/, "") + "/api/orders";
+      const endpoint = url + "/api/orders";
       await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -895,19 +903,19 @@ class TechCodeApp {
   }
 
   async pushDeleteToCloudflare(orderId) {
-    const url = this.getCloudflareApiUrl();
+    const url = this.getCleanApiUrl();
     if (!url || !orderId) return;
     try {
-      const endpoint = url.replace(/\/+$/, "") + `/api/orders/${encodeURIComponent(orderId)}`;
+      const endpoint = url + `/api/orders/${encodeURIComponent(orderId)}`;
       await fetch(endpoint, { method: "DELETE" });
     } catch (e) {}
   }
 
   async pushStatusToCloudflare(orderId, newStatus) {
-    const url = this.getCloudflareApiUrl();
+    const url = this.getCleanApiUrl();
     if (!url || !orderId) return;
     try {
-      const endpoint = url.replace(/\/+$/, "") + `/api/orders/${encodeURIComponent(orderId)}`;
+      const endpoint = url + `/api/orders/${encodeURIComponent(orderId)}`;
       await fetch(endpoint, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
