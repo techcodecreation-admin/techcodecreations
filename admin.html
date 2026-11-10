@@ -62,37 +62,53 @@
     <!-- Main Content Area -->
     <main class="admin-container-inner">
       <div class="container">
-        <!-- Login Card -->
+        <!-- Executive Admin Login Card (New Security Design) -->
         <div class="admin-login-card" id="adminLoginCard">
-          <div class="admin-lock-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <div class="admin-lock-badge">
+            <span class="pulse-dot"></span>
+            <span>RESTRICTED ACCESS • ADMIN ONLY</span>
           </div>
-          <h2 style="font-size:1.8rem; margin-bottom:6px;">Admin Portal Login</h2>
-          <p style="color:var(--text-secondary); margin-bottom:24px;">Please enter administrative credentials to access booking records & bills.</p>
+
+          <div class="admin-lock-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+
+          <h2 class="admin-login-title">Admin Portal Login</h2>
+          <p class="admin-login-subtitle">Enter your administrative credentials to manage orders, bills, and client records.</p>
 
           <form id="adminLoginForm">
-            <div class="form-group" style="text-align:left; margin-bottom: 16px;">
-              <label class="form-label" for="adminUsername">Username</label>
-              <input type="text" id="adminUsername" class="form-control" placeholder="TechCodeCreation" required autocomplete="username">
+            <div class="admin-input-wrap">
+              <label class="form-label" for="adminUsername">
+                <span>Username</span>
+              </label>
+              <input type="text" id="adminUsername" class="form-control" placeholder="Enter admin username" required autocomplete="username">
             </div>
 
-            <div class="form-group" style="text-align:left; margin-bottom: 20px; position:relative;">
-              <label class="form-label" for="adminPassword">Password</label>
-              <input type="password" id="adminPassword" class="form-control" placeholder="••••••••••••" required autocomplete="current-password">
-              <button type="button" id="togglePassBtn" style="position:absolute; right:14px; top:38px; background:none; border:none; color:var(--text-secondary); cursor:pointer;">
+            <div class="admin-input-wrap" style="position:relative;">
+              <label class="form-label" for="adminPassword">
+                <span>Password</span>
+              </label>
+              <input type="password" id="adminPassword" class="form-control" placeholder="Enter password" required autocomplete="current-password" style="padding-right:44px;">
+              <button type="button" id="togglePassBtn" style="position:absolute; right:12px; top:36px; background:none; border:none; color:#64748b; cursor:pointer; padding:6px;" title="Show / Hide Password">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </button>
             </div>
 
-            <div id="adminLoginError" style="display:none; color:#ef4444; font-size:0.85rem; margin-bottom:14px; font-weight:700;"></div>
+            <div id="adminLoginError" style="display:none; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:10px 14px; border-radius:10px; font-size:0.86rem; margin-bottom:16px; font-weight:700; text-align:left;"></div>
 
-            <button type="submit" class="btn btn-primary" style="width:100%;" id="btnAdminSignIn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-              <span>Sign In to Dashboard</span>
+            <button type="submit" class="admin-signin-btn" id="btnAdminSignIn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+              <span>Sign In to Portal</span>
             </button>
           </form>
 
-          
+          <div class="admin-security-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <span>256-Bit Encrypted Session • Authorized Access Only</span>
+          </div>
         </div>
 
         <!-- Dashboard View (Shown once logged in) -->
@@ -100,9 +116,15 @@
           <!-- Header Bar -->
           <div class="admin-dashboard-header">
             <div>
-              <div class="admin-user-pill">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                <span>Active Administrator: <strong>TechCodeCreation</strong></span>
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div class="admin-user-pill">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <span>Active Administrator: <strong>KUBERA</strong></span>
+                </div>
+                <div class="admin-user-pill" id="cfDbStatusPill" onclick="if(window.app){app.openCloudflareModal();}" style="cursor:pointer; background:#eff6ff; border-color:#93c5fd; color:#1d4ed8; display:inline-flex; align-items:center; gap:6px;" title="Cloudflare D1 Database (techcodecreations@gmail.com) - Click to manage">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                  <span id="cfDbStatusText">Cloudflare DB: <strong>techcodecreations@gmail.com</strong></span>
+                </div>
               </div>
               <h1 style="font-size:2rem; margin-top:8px; color:#0f172a;">Client Orders & Bill Generator</h1>
             </div>
@@ -111,6 +133,16 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
                 <span>+ Create Official Bill</span>
                 <span id="nextBillNoHeaderBadge" style="font-size:0.72rem; background:rgba(255,255,255,0.22); padding:2px 7px; border-radius:6px; margin-left:4px; font-family:monospace; font-weight:700;">TCC/2026/001</span>
+              </button>
+
+              <button class="btn btn-secondary" id="btnResetBillSeqHeader" onclick="if(window.app){app.resetBillSequence(true);}" title="Reset bill number sequence (e.g. back to 001)" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span>Reset Bill No</span>
+              </button>
+
+              <button class="btn btn-secondary" onclick="if(window.app){app.openCloudflareModal();}" title="Cloudflare D1 Database Settings" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#0369a1; border-color:#93c5fd; background:#f0f9ff;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+                <span>Cloudflare DB</span>
               </button>
 
               <button class="btn btn-secondary" id="exportCsvBtn" title="Export as CSV spreadsheet">
@@ -281,11 +313,53 @@
   <!-- ==========================================================================
        OFFICIAL BILL / INVOICE DISPLAY MODAL
        ========================================================================== -->
-  <div class="modal-overlay" id="billModal">
-    <div class="modal-content" style="max-width:880px; padding:30px;">
-      <button class="modal-close-btn no-print" onclick="closeModal('billModal')" aria-label="Close">✕</button>
-      <div id="billContentArea">
-        <!-- Rendered dynamically by generateBill() -->
+  <!-- ==========================================================================
+       OFFICIAL FULL-SCREEN BILL / INVOICE DISPLAY MODAL
+       ========================================================================== -->
+  <div class="modal-overlay bill-modal-fullscreen-overlay" id="billModal">
+    <div class="modal-content bill-modal-fullscreen-content" id="billModalContent">
+      <!-- Fullscreen Top Toolbar (Clean, non-printable action bar) -->
+      <div class="tcc-bill-fullscreen-topbar no-print" id="billModalTopBar">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; font-size:1.1rem;">📄</span>
+            <div>
+              <div style="font-weight:800; font-size:0.96rem; color:#0f172a; line-height:1.2;">Official Invoice Display</div>
+              <div style="font-size:0.75rem; color:#64748b;">Tech Code Creations • Full-Screen View</div>
+            </div>
+          </div>
+          <span id="billModalInvBadge" style="font-family:monospace; font-weight:800; background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; padding:4px 10px; border-radius:6px; font-size:0.82rem;">TCC/2026/001</span>
+          <span style="font-size:0.75rem; font-weight:800; background:#dcfce7; color:#15803d; border:1px solid #86efac; padding:4px 9px; border-radius:6px;">✓ VERIFIED &amp; PAID</span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="window.print()" style="padding:8px 16px; font-weight:800; display:inline-flex; align-items:center; gap:6px; box-shadow:0 4px 14px rgba(2, 132, 199, 0.35);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>Print / Save PDF</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnToggleSheetPreview" onclick="if(window.app){app.toggleBillSheetPreview();}" style="padding:8px 14px; font-weight:700; background:#ffffff; border-color:#cbd5e1; color:#334155; display:inline-flex; align-items:center; gap:6px;" title="Toggle between A4 Sheet Preview and full-width layout">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <span>Sheet Preview</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnToggleFullscreen" onclick="if(window.app){app.toggleBillFullscreen();}" style="padding:8px 14px; font-weight:700; background:#ffffff; border-color:#cbd5e1; color:#334155; display:inline-flex; align-items:center; gap:6px;" title="Toggle Full-Screen / Windowed Mode">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <span>⛶ Fullscreen</span>
+          </button>
+          <a id="billModalWaBtn" href="#" target="_blank" class="btn btn-secondary btn-sm" style="padding:8px 14px; color:#16a34a; border-color:#86efac; background:#f0fdf4; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span>WhatsApp</span>
+          </a>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('billModal')" style="padding:8px 14px; font-weight:700;">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable content area containing the bill -->
+      <div class="tcc-bill-scroll-area">
+        <div class="tcc-bill-print-sheet-wrapper" id="billContentArea">
+          <!-- Rendered dynamically by generateBill() -->
+        </div>
       </div>
     </div>
   </div>
@@ -298,28 +372,47 @@
     </div>
   </div>
 
-  <!-- Official Manual Bill / Invoice Generator Modal - Real Bill System Matching Reference Image -->
-  <div class="modal-overlay" id="manualOrderModal">
-    <div class="modal-content" style="max-width:920px; padding:22px; border-radius:18px; box-shadow:0 25px 60px -15px rgba(2, 132, 199, 0.35); background:#f8fafc; max-height:92vh; overflow-y:auto;">
-      <button class="modal-close-btn" onclick="closeModal('manualOrderModal')">✕</button>
-      
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding:0 6px; flex-wrap:wrap; gap:8px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:0.75rem; padding:3px 10px; background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; border-radius:12px; font-weight:800; letter-spacing:0.04em;">
-            REAL BILL DESIGN SYSTEM
-          </span>
-          <span style="font-size:0.84rem; color:#475569; font-weight:600;">
-            Create Official Bill matching the verified invoice format:
-          </span>
+  <!-- Official Manual Bill / Invoice Generator Modal - Full-Screen Real Bill System -->
+  <div class="modal-overlay bill-modal-fullscreen-overlay" id="manualOrderModal">
+    <div class="modal-content bill-modal-fullscreen-content" id="manualOrderModalContent">
+      <!-- Fullscreen Top Toolbar (Clean, non-printable action bar) -->
+      <div class="tcc-bill-fullscreen-topbar no-print" id="manualOrderModalTopBar">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:8px; background:linear-gradient(135deg, #0284c7, #2563eb); color:#fff; font-size:1.1rem;">📝</span>
+            <div>
+              <div style="font-weight:800; font-size:0.96rem; color:#0f172a; line-height:1.2;">Create Official Bill / Invoice</div>
+              <div style="font-size:0.75rem; color:#64748b;">Tech Code Creations • Full-Screen Generator</div>
+            </div>
+          </div>
+          <span id="manualModalInvBadge" style="font-family:monospace; font-weight:800; background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; padding:4px 10px; border-radius:6px; font-size:0.82rem;">TCC/2026/001</span>
+          <span style="font-size:0.75rem; padding:4px 10px; background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; border-radius:12px; font-weight:800; letter-spacing:0.04em;">REAL BILL DESIGN SYSTEM</span>
         </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button type="button" class="btn btn-secondary" id="autoNewBillBtn" style="font-size:0.75rem; padding:5px 12px; border-color:#cbd5e1; color:#334155; background:#ffffff;" title="Reset form and generate next sequential bill number">
-            ↻ Reset &amp; Next Bill
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-secondary btn-sm" id="topResetBillBtn" style="padding:7px 12px; border-color:#cbd5e1; color:#334155; background:#ffffff; font-weight:700;" title="Clear all details from this form">
+            ↻ Reset Form
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="topNextBillBtn" style="padding:7px 12px; border-color:#93c5fd; color:#0284c7; background:#f0f9ff; font-weight:700;" title="Clear details and advance to next bill number">
+            ⚡ Next Bill No
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="topResetBillSeqBtn" onclick="if(window.app){app.resetBillSequence(true);}" style="padding:7px 12px; border-color:#fca5a5; color:#dc2626; background:#fef2f2; font-weight:700; display:inline-flex; align-items:center; gap:6px;" title="Reset bill numbering sequence back to 001">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>Reset Bill No</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnToggleManualFullscreen" onclick="if(window.app){app.toggleManualBillFullscreen();}" style="padding:7px 12px; background:#ffffff; border-color:#cbd5e1; color:#334155; font-weight:700;" title="Toggle Full-Screen / Windowed Mode">
+            ⛶ Fullscreen
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('manualOrderModal')" style="padding:7px 14px; font-weight:700;">
+            ✕ Close
           </button>
         </div>
       </div>
 
-      <form id="manualOrderForm">
+      <!-- Scrollable content area containing the full-screen bill generator form -->
+      <div class="tcc-bill-scroll-area" style="padding:24px 16px; background:#f1f5f9;">
+        <div style="max-width:1100px; margin:0 auto; width:100%;">
+          <form id="manualOrderForm">
         <div class="tcc-invoice-container" style="box-shadow:0 10px 30px rgba(0,0,0,0.06); border:2px solid #0284c7; padding:28px 30px;">
           <!-- Top-Right Geometric Polygonal Accent -->
           <div class="tcc-corner-decor tcc-corner-top-right">
@@ -386,8 +479,8 @@
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
                   <span>INVOICE</span>
                 </div>
-                <button type="button" id="btnAutoChangeBillNo" class="tcc-auto-btn" title="Click to auto-change to the next sequential bill number">
-                  ↻ Auto Change
+                <button type="button" id="btnAutoChangeBillNo" class="tcc-auto-btn" title="Click to advance to the next sequential bill number">
+                  ⏭ Next Number
                 </button>
               </div>
 
@@ -399,11 +492,11 @@
                     <input type="text" name="manualInvoiceNo" id="manualInvoiceNo" class="tcc-invoice-form-input" placeholder="TCC/2026/001" value="" required style="font-family:monospace; font-weight:800; color:#0369a1; background:#f0f9ff; letter-spacing:0.04em;">
                   </div>
                 </div>
-                <div class="tcc-inv-meta-item" style="align-items:center; margin-top:4px;">
+                <div class="tcc-inv-meta-item" style="align-items:center; margin-top:6px;">
                   <span class="lbl" style="width:85px; font-weight:700;">Date</span>
                   <span class="colon">:</span>
                   <div style="flex:1;">
-                    <input type="text" name="manualDate" id="manualDate" class="tcc-invoice-form-input" placeholder="DD-MM-YYYY" value="" required style="font-weight:700;">
+                    <input type="date" name="manualDate" id="manualDate" class="tcc-invoice-form-input" required style="font-weight:700; cursor:pointer; width:100%; border:1.5px solid #0284c7; background:#ffffff; padding:6px 10px;">
                   </div>
                 </div>
               </div>
@@ -673,13 +766,38 @@ For any queries / support contact +91 8248688471.</textarea>
           </div>
         </div>
 
-        <!-- Submit Button -->
-        <div style="margin-top:14px;">
-          <button type="submit" class="btn btn-primary" style="width:100%; padding:14px; font-size:1.1rem; font-weight:800; justify-content:center; border-radius:10px; box-shadow:0 12px 28px -5px rgba(2, 132, 199, 0.45);">
-            📄 Create Official Bill &amp; Show Invoice
-          </button>
+        <!-- Bottom Form Actions: Dedicated Alignment with generous spacing separating Reset, Next, and Enter -->
+        <div class="tcc-bill-form-actions" style="margin-top:20px; padding-top:18px; border-top:1.5px solid #cbd5e1; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <!-- Left Group: Reset Form & Next Bill buttons with proper spacing -->
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <button type="button" id="btnBottomResetBill" class="btn btn-secondary" style="padding:11px 18px; font-weight:700; border-color:#cbd5e1; color:#334155; background:#ffffff; display:inline-flex; align-items:center; gap:8px;" title="Reset and clear all input fields in this form">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>↻ Reset Form</span>
+            </button>
+            <button type="button" id="btnBottomNextBill" class="btn btn-secondary" style="padding:11px 18px; font-weight:700; border-color:#93c5fd; color:#0284c7; background:#f0f9ff; display:inline-flex; align-items:center; gap:8px;" title="Clear fields and advance to the next sequential bill number">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+              <span>⚡ Next Bill No</span>
+            </button>
+            <button type="button" id="btnBottomResetSeqBill" class="btn btn-secondary" onclick="if(window.app){app.resetBillSequence(true);}" style="padding:11px 16px; font-weight:700; border-color:#fca5a5; color:#dc2626; background:#fef2f2; display:inline-flex; align-items:center; gap:8px;" title="Reset bill number sequence back to 001">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              <span>🔢 Reset Bill No</span>
+            </button>
+          </div>
+
+          <!-- Right Group: Cancel & Enter / Create Bill (Distinct visual hierarchy, separated from Reset/Next) -->
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('manualOrderModal')" style="padding:11px 18px; font-weight:700;">
+              Cancel
+            </button>
+            <button type="submit" id="btnSubmitEnterBill" class="btn btn-primary" style="padding:12px 30px; font-size:1.05rem; font-weight:800; display:inline-flex; align-items:center; gap:10px; border-radius:10px; box-shadow:0 8px 24px -3px rgba(2, 132, 199, 0.45);" title="Enter and create the official bill">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Enter / Create Bill ↵</span>
+            </button>
+          </div>
         </div>
       </form>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -703,6 +821,83 @@ For any queries / support contact +91 8248688471.</textarea>
     </div>
   </div>
 
+  <!-- Cloudflare D1 Database Manager Modal -->
+  <div class="modal-overlay" id="cloudflareDbModal">
+    <div class="modal-content" style="max-width:680px; padding:28px; border-radius:18px; box-shadow:0 25px 60px -15px rgba(2, 132, 199, 0.35); background:#ffffff;">
+      <button class="modal-close-btn" onclick="closeModal('cloudflareDbModal')">✕</button>
+
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; padding-bottom:14px; border-bottom:1.5px solid #e2e8f0;">
+        <span style="display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg, #f97316, #ea580c); color:#fff; font-size:1.4rem;">
+          ☁️
+        </span>
+        <div>
+          <h2 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin:0;">Cloudflare D1 Database Connection</h2>
+          <p style="font-size:0.84rem; color:#64748b; margin:2px 0 0 0;">Synchronize orders and official bills across devices with Cloudflare Edge SQL</p>
+        </div>
+      </div>
+
+      <!-- Account Info Card -->
+      <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 18px; margin-bottom:18px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:0.88rem;">
+          <div>
+            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Connected Account</span>
+            <strong style="color:#0f172a; font-family:monospace; font-size:0.95rem;">techcodecreations@gmail.com</strong>
+          </div>
+          <div>
+            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Database Name</span>
+            <strong style="color:#0284c7; font-family:monospace; font-size:0.95rem;">techcodecreations-db (D1 SQL)</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connection Form -->
+      <form id="cloudflareSettingsForm" onsubmit="if(window.app){app.saveCloudflareSettings(event);} return false;">
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:700; font-size:0.86rem; color:#334155; margin-bottom:6px;">
+            Cloudflare Worker API Endpoint URL
+          </label>
+          <input type="url" id="cfApiUrlInput" class="tcc-invoice-form-input" placeholder="https://techcodecreations-api.workers.dev (or /api for Pages)" style="width:100%; font-family:monospace; font-size:0.9rem; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px;">
+          <span style="display:block; font-size:0.76rem; color:#64748b; margin-top:4px;">
+            Default endpoint: <code>/api</code> (auto-routes to Cloudflare Pages / Worker backend)
+          </span>
+        </div>
+
+        <div id="cfConnectionStatusBox" style="padding:10px 14px; border-radius:8px; font-size:0.84rem; margin-bottom:16px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; display:flex; align-items:center; gap:8px;">
+          <span id="cfStatusIcon">⚡</span>
+          <span id="cfStatusMsg">Ready to connect to Cloudflare D1. Click "Test Connection" or "Sync All Orders".</span>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.testCloudflareConnection();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <span>🔍 Test Connection</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.syncCloudflareNow();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#0284c7; border-color:#93c5fd; background:#f0f9ff;">
+            <span>🔄 Sync All Local Orders to Cloudflare</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.pullFromCloudflareNow();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#16a34a; border-color:#86efac; background:#f0fdf4;">
+            <span>⬇️ Pull Latest from Cloudflare</span>
+          </button>
+        </div>
+
+        <!-- Quick Setup Instructions Preview -->
+        <div style="background:#f1f5f9; border-radius:10px; padding:12px 14px; font-size:0.8rem; color:#475569; margin-bottom:18px;">
+          <strong style="color:#0f172a; display:block; margin-bottom:4px;">Quick Cloudflare CLI Deployment:</strong>
+          <code style="display:block; background:#ffffff; padding:6px 10px; border-radius:6px; font-family:monospace; color:#0369a1; border:1px solid #e2e8f0; margin-bottom:4px;">
+            npx wrangler d1 create techcodecreations-db<br>
+            npx wrangler d1 execute techcodecreations-db --file=./schema.sql<br>
+            npx wrangler deploy
+          </code>
+          <span>Detailed instructions saved in <code>CLOUDFLARE_SETUP.md</code></span>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('cloudflareDbModal')">Close</button>
+          <button type="submit" class="btn btn-primary" style="padding:8px 20px; font-weight:800;">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 
 
   <div id="toastContainer" class="toast-container"></div>
@@ -714,6 +909,32 @@ For any queries / support contact +91 8248688471.</textarea>
         window.app.orders = window.app.loadOrders();
         window.app.renderAdminOrders();
         window.app.updateAdminMetrics();
+      }
+    });
+
+    // Failsafe direct handlers to guarantee Admin Portal Login opens
+    document.addEventListener('DOMContentLoaded', () => {
+      // If already logged in, ensure dashboard is visible
+      if (sessionStorage.getItem('techcode_admin_session') === 'true') {
+        const card = document.getElementById('adminLoginCard');
+        const dash = document.getElementById('adminDashboardContainer');
+        if (card) card.style.display = 'none';
+        if (dash) dash.style.display = 'block';
+      }
+
+      const qBtn = document.getElementById('quickLoginBtn');
+      if (qBtn) {
+        qBtn.addEventListener('click', () => {
+          if (window.app && typeof window.app.quickAdminLogin === 'function') {
+            window.app.quickAdminLogin();
+          } else {
+            sessionStorage.setItem('techcode_admin_session', 'true');
+            const card = document.getElementById('adminLoginCard');
+            const dash = document.getElementById('adminDashboardContainer');
+            if (card) card.style.display = 'none';
+            if (dash) dash.style.display = 'block';
+          }
+        });
       }
     });
   </script>

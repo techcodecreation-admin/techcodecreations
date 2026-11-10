@@ -1,0 +1,25 @@
+# ==============================================================================
+# TECH CODE CREATIONS - CLOUDFLARE CONFIGURATION
+# Account: techcodecreations@gmail.com
+# ==============================================================================
+
+name = "techcodecreations-api"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# Cloudflare D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "techcodecreations-db"
+database_id = "techcodecreations-db-id"
+
+# Static assets serving (Optional: can serve the whole website directly from Cloudflare)
+# [site]
+# bucket = "./"
+
+# Environment Variables
+[vars]
+ADMIN_EMAIL = "techcodecreations@gmail.com"
+AGENCY_NAME = "Tech Code Creations"
+FOUNDER = "KUBERAMOORTHY S"
+

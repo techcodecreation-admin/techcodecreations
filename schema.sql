@@ -1,0 +1,59 @@
+-- ============================================================================
+-- TECH CODE CREATIONS - CLOUDFLARE D1 DATABASE SCHEMA
+-- Account: techcodecreations@gmail.com
+-- Database Name: techcodecreations-db
+-- ============================================================================
+
+-- 1. Orders and Invoices Table
+CREATE TABLE IF NOT EXISTS orders (
+  id TEXT PRIMARY KEY,
+  invoice_no TEXT,
+  client_name TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  email TEXT,
+  address TEXT DEFAULT 'Kumbakonam, Tamil Nadu',
+  website_type TEXT,
+  category TEXT DEFAULT 'Web Development',
+  budget TEXT,
+  details TEXT,
+  status TEXT DEFAULT 'PENDING',
+  payment_status TEXT DEFAULT 'PENDING REVIEW',
+  date TEXT NOT NULL,
+  net_amount REAL DEFAULT 0,
+  cost_amount REAL DEFAULT 0,
+  profit_amount REAL DEFAULT 0,
+  paid_amount REAL DEFAULT 0,
+  items_json TEXT,
+  terms TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Fast lookup indexes
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_invoice_no ON orders(invoice_no);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);
+
+-- 2. Bill Number Sequence Counter Table
+CREATE TABLE IF NOT EXISTS bill_sequences (
+  year INTEGER PRIMARY KEY,
+  current_seq INTEGER DEFAULT 1,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert starting sequence for current year 2026
+INSERT OR IGNORE INTO bill_sequences (year, current_seq, updated_at)
+VALUES (2026, 1, CURRENT_TIMESTAMP);
+
+-- 3. Inquiries / Contact Messages Table
+CREATE TABLE IF NOT EXISTS inquiries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  subject TEXT,
+  message TEXT NOT NULL,
+  status TEXT DEFAULT 'UNREAD',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

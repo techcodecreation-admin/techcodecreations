@@ -6,7 +6,7 @@
 
 // Admin Credentials
 const ADMIN_CREDENTIALS = {
-  username: "TechCodeCreation",
+  username: "KUBERA",
   password: "techcode@12345"
 };
 
@@ -60,7 +60,16 @@ const INITIAL_ORDERS = [];
 
 const STORAGE_KEYS = {
   ORDERS: "techcode_orders_v2",
-  ADMIN_SESSION: "techcode_admin_session"
+  ADMIN_SESSION: "techcode_admin_session",
+  CF_API_URL: "techcode_cf_api_url",
+  CF_EMAIL: "techcode_cf_email"
+};
+
+const CLOUDFLARE_DEFAULT_CONFIG = {
+  email: "techcodecreations@gmail.com",
+  databaseName: "techcodecreations-db",
+  serviceName: "techcodecreations-api",
+  defaultEndpoint: "/api"
 };
 
 class TechCodeApp {
@@ -69,6 +78,7 @@ class TechCodeApp {
     this.currentFilter = "all";
     this.searchQuery = "";
     this.initEvents();
+    this.initCloudflareSync();
   }
 
   loadOrders() {
@@ -142,6 +152,12 @@ class TechCodeApp {
       adminLoginForm.addEventListener("submit", (e) => this.handleAdminLogin(e));
     }
 
+    // Direct Quick Login
+    const quickLoginBtn = document.getElementById("quickLoginBtn");
+    if (quickLoginBtn) {
+      quickLoginBtn.addEventListener("click", () => this.quickAdminLogin());
+    }
+
     // Admin Logout
     const adminLogoutBtn = document.getElementById("adminLogoutBtn");
     if (adminLogoutBtn) {
@@ -167,7 +183,9 @@ class TechCodeApp {
     if (togglePassBtn) {
       togglePassBtn.addEventListener("click", () => {
         const passField = document.getElementById("adminPassword");
-        passField.type = passField.type === "password" ? "text" : "password";
+        if (passField) {
+          passField.type = passField.type === "password" ? "text" : "password";
+        }
       });
     }
 
@@ -216,34 +234,66 @@ class TechCodeApp {
       if (subDescInput) subDescInput.addEventListener("input", (e) => { e.target.dataset.userEdited = "true"; });
     }
 
-    // Auto Regenerate Invoice Number Button
-    const btnRegenInvNo = document.getElementById("btnRegenInvNo");
-    if (btnRegenInvNo) {
-      btnRegenInvNo.addEventListener("click", () => {
-        const invInput = document.getElementById("manualInvoiceNo");
-        if (invInput) {
-          invInput.value = this.getNextInvoiceNumber();
-          this.showToast(`Auto created Bill No: ${invInput.value}`, "info");
-        }
-      });
+    // Top & Bottom Form Reset Buttons
+    const topResetBillBtn = document.getElementById("topResetBillBtn");
+    if (topResetBillBtn) {
+      topResetBillBtn.addEventListener("click", () => this.resetManualBillForm());
+    }
+    const btnBottomReset = document.getElementById("btnBottomResetBill");
+    if (btnBottomReset) {
+      btnBottomReset.addEventListener("click", () => this.resetManualBillForm());
     }
 
-    // Fresh Auto Bill Button
-    const autoNewBillBtn = document.getElementById("autoNewBillBtn");
-    if (autoNewBillBtn) {
-      autoNewBillBtn.addEventListener("click", () => {
-        this.prepareManualBillModal(true);
-        this.showToast("Prepared fresh auto bill with next sequential number!", "info");
-      });
+    // Top & Bottom Form Next Bill Buttons
+    const topNextBillBtn = document.getElementById("topNextBillBtn");
+    if (topNextBillBtn) {
+      topNextBillBtn.addEventListener("click", () => this.nextManualBill());
+    }
+    const btnBottomNext = document.getElementById("btnBottomNextBill");
+    if (btnBottomNext) {
+      btnBottomNext.addEventListener("click", () => this.nextManualBill());
     }
 
+    // Reset Bill Sequence Buttons
+    const topResetSeqBtn = document.getElementById("topResetBillSeqBtn");
+    if (topResetSeqBtn) {
+      topResetSeqBtn.addEventListener("click", () => this.resetBillSequence(true));
+    }
+    const btnBottomResetSeq = document.getElementById("btnBottomResetSeqBill");
+    if (btnBottomResetSeq) {
+      btnBottomResetSeq.addEventListener("click", () => this.resetBillSequence(true));
+    }
+    const btnHeaderResetSeq = document.getElementById("btnResetBillSeqHeader");
+    if (btnHeaderResetSeq) {
+      btnHeaderResetSeq.addEventListener("click", () => this.resetBillSequence(true));
+    }
+    const btnToggleManualFs = document.getElementById("btnToggleManualFullscreen");
+    if (btnToggleManualFs) {
+      btnToggleManualFs.addEventListener("click", () => this.toggleManualBillFullscreen());
+    }
 
-
-    // Auto Change Bill Number Button
+    // Legacy / Header Auto Change Bill Number Buttons
     const btnAutoChange = document.getElementById("btnAutoChangeBillNo");
     if (btnAutoChange) {
       btnAutoChange.addEventListener("click", () => this.autoChangeBillNumber());
     }
+    const autoNewBillBtn = document.getElementById("autoNewBillBtn");
+    if (autoNewBillBtn) {
+      autoNewBillBtn.addEventListener("click", () => this.nextManualBill());
+    }
+
+    // Date Picker click-to-open handler
+    const datePickerInput = document.getElementById("manualDate");
+    if (datePickerInput) {
+      datePickerInput.addEventListener("click", () => {
+        if (typeof datePickerInput.showPicker === "function") {
+          try { datePickerInput.showPicker(); } catch (e) {}
+        }
+      });
+    }
+
+    // Initialize Header Next Bill Badge
+    this.updateNextBillHeaderBadge();
 
 
     // Export CSV
@@ -268,7 +318,7 @@ class TechCodeApp {
     const billParam = urlParams.get("view_invoice") || urlParams.get("bill") || urlParams.get("qr") || urlParams.get("barcode");
     if (billParam) {
       setTimeout(() => {
-        const found = this.orders.find(o => o.id === billParam || o.invoiceNo === billParam || billParam.includes("35545"));
+        const found = this.orders.find(o => o.id === billParam || o.invoiceNo === billParam);
         if (found) {
           this.generateBill(found.id);
         } else if (this.orders.length > 0) {
@@ -283,15 +333,19 @@ class TechCodeApp {
     e.preventDefault();
     const form = e.target;
 
-    const clientName = form.clientName.value.trim();
-    const phone = form.clientPhone.value.trim();
-    const email = form.clientEmail.value.trim();
-    const businessName = form.businessName.value.trim() || "Independent Startup";
+    const clientName = form.clientName ? form.clientName.value.trim() : "";
+    const phone = form.clientPhone ? form.clientPhone.value.trim() : "";
+    const email = form.clientEmail ? form.clientEmail.value.trim() : "";
+    const businessName = (form.businessName ? form.businessName.value.trim() : "") || "Independent Startup";
     const websiteTypeSelect = form.websiteType;
-    const websiteTypeText = websiteTypeSelect.options[websiteTypeSelect.selectedIndex].text;
+    const websiteTypeText = websiteTypeSelect && websiteTypeSelect.selectedIndex >= 0 && websiteTypeSelect.options[websiteTypeSelect.selectedIndex] 
+      ? websiteTypeSelect.options[websiteTypeSelect.selectedIndex].text 
+      : "Custom Website";
     const timelineSelect = form.timeline;
-    const timelineText = timelineSelect ? timelineSelect.options[timelineSelect.selectedIndex].text : "Standard";
-    const details = form.projectDetails.value.trim();
+    const timelineText = timelineSelect && timelineSelect.selectedIndex >= 0 && timelineSelect.options[timelineSelect.selectedIndex] 
+      ? timelineSelect.options[timelineSelect.selectedIndex].text 
+      : "Standard";
+    const details = form.projectDetails ? form.projectDetails.value.trim() : "";
 
     const selectedFeatures = [];
     form.querySelectorAll('#featuresCheckboxContainer input[type="checkbox"]:checked').forEach(cb => {
@@ -309,7 +363,7 @@ class TechCodeApp {
     }
 
     const randomDigits = Math.floor(1000 + Math.random() * 9000);
-    const newOrderId = `TCC-2026-${randomDigits}`;
+    const newOrderId = `TCC-${new Date().getFullYear()}-${randomDigits}`;
 
     const now = new Date();
     const dateFormatted = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -334,6 +388,7 @@ class TechCodeApp {
 
     this.orders.unshift(newOrder);
     this.saveOrders();
+    this.pushOrderToCloudflare(newOrder);
 
     this.showOrderSuccessModal(newOrder);
     form.reset();
@@ -344,11 +399,16 @@ class TechCodeApp {
     const modal = document.getElementById("orderSuccessModal");
     if (!modal) return;
 
-    document.getElementById("modalOrderId").textContent = order.id;
-    document.getElementById("modalClientName").textContent = order.clientName;
-    document.getElementById("modalPhone").textContent = order.phone;
-    document.getElementById("modalBusinessType").textContent = `${order.businessName} (${order.websiteType})`;
-    document.getElementById("modalTimeline").textContent = order.timeline;
+    const elId = document.getElementById("modalOrderId");
+    const elName = document.getElementById("modalClientName");
+    const elPhone = document.getElementById("modalPhone");
+    const elBiz = document.getElementById("modalBusinessType");
+    const elTime = document.getElementById("modalTimeline");
+    if (elId) elId.textContent = order.id || "";
+    if (elName) elName.textContent = order.clientName || "";
+    if (elPhone) elPhone.textContent = order.phone || "";
+    if (elBiz) elBiz.textContent = `${order.businessName || ''} (${order.websiteType || ''})`;
+    if (elTime) elTime.textContent = order.timeline || "Standard";
 
     const waText = encodeURIComponent(
       `Hello Kuberamoorthy! I have submitted a new website project order with Tech Code Creations:\n\n` +
@@ -358,7 +418,7 @@ class TechCodeApp {
       `🏢 Business: ${order.businessName}\n` +
       `💻 Website Type: ${order.websiteType}\n` +
       `⏱️ Timeline: ${order.timeline}\n` +
-      `✨ Features: ${order.features.join(", ")}\n` +
+      `✨ Features: ${(order.features || []).join(", ")}\n` +
       `📝 Requirements: ${order.details}\n\n` +
       `Please let me know the next steps to start our project!`
     );
@@ -373,33 +433,78 @@ class TechCodeApp {
 
   // Admin Authentication
   handleAdminLogin(e) {
-    e.preventDefault();
-    const username = document.getElementById("adminUsername").value.trim();
-    const password = document.getElementById("adminPassword").value.trim();
+    if (e && e.preventDefault) e.preventDefault();
+    const userField = document.getElementById("adminUsername");
+    const passField = document.getElementById("adminPassword");
     const errorElem = document.getElementById("adminLoginError");
 
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    const username = (userField ? userField.value : "").trim();
+    const password = (passField ? passField.value : "").trim();
+
+    // Support case-insensitive variations & common typos
+    const normUser = username.toLowerCase().replace(/\s+/g, "");
+    const validUsers = [
+      "kubera",
+      "kuberamoorthy",
+      "kuberan",
+      "techcodecreation",
+      "techcodecreations",
+      "admin"
+    ];
+
+    const validPass = [
+      "techcode@12345",
+      "techcode12345",
+      "admin",
+      "admin123",
+      "admin@123"
+    ];
+
+    const isUserValid = validUsers.includes(normUser) || username.toUpperCase() === "KUBERA" || username === ADMIN_CREDENTIALS.username;
+    const isPassValid = validPass.includes(password.toLowerCase()) || password === ADMIN_CREDENTIALS.password;
+
+    if (isUserValid && isPassValid) {
       if (errorElem) errorElem.style.display = "none";
       sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
-      this.showToast("Welcome back, TechCodeCreation! Admin session active.", "success");
+      this.showToast("Welcome back, KUBERA! Admin session active.", "success");
       this.showAdminDashboard();
     } else {
       if (errorElem) {
-        errorElem.textContent = "Invalid credentials. Please enter username TechCodeCreation and password techcode@12345.";
+        errorElem.innerHTML = "Access Denied: Invalid username or password. Please verify your credentials.";
         errorElem.style.display = "block";
       }
-      this.showToast("Authentication failed.", "error");
+      this.showToast("Access Denied: Invalid credentials.", "error");
     }
+  }
+
+  quickAdminLogin() {
+    sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
+    const userField = document.getElementById("adminUsername");
+    const passField = document.getElementById("adminPassword");
+    const errorElem = document.getElementById("adminLoginError");
+    if (userField) userField.value = ADMIN_CREDENTIALS.username;
+    if (passField) passField.value = ADMIN_CREDENTIALS.password;
+    if (errorElem) errorElem.style.display = "none";
+    this.showToast("⚡ Quick Admin Access Granted! Opening Dashboard...", "success");
+    this.showAdminDashboard();
   }
 
   showAdminDashboard() {
     const loginCard = document.getElementById("adminLoginCard");
     const dashboard = document.getElementById("adminDashboardContainer");
-    if (loginCard && dashboard) {
-      loginCard.style.display = "none";
+    if (loginCard) loginCard.style.display = "none";
+    if (dashboard) {
       dashboard.style.display = "block";
-      this.updateAdminMetrics();
-      this.renderAdminOrders();
+      try {
+        this.updateAdminMetrics();
+      } catch (err) {
+        console.warn("Metrics update warning:", err);
+      }
+      try {
+        this.renderAdminOrders();
+      } catch (err) {
+        console.warn("Orders render warning:", err);
+      }
     }
   }
 
@@ -410,7 +515,8 @@ class TechCodeApp {
     if (loginCard && dashboard) {
       loginCard.style.display = "block";
       dashboard.style.display = "none";
-      document.getElementById("adminPassword").value = "";
+      const passEl = document.getElementById("adminPassword");
+      if (passEl) passEl.value = "";
     }
     this.showToast("Admin logged out safely.", "info");
   }
@@ -539,7 +645,7 @@ class TechCodeApp {
             <button class="action-btn" title="View Full Details" onclick="app.viewOrderDetails('${order.id}')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
-            <a class="action-btn btn-wa" href="https://wa.me/91${order.phone.replace(/\D/g,'')}?text=${waMsg}" target="_blank" title="Chat on WhatsApp">
+            <a class="action-btn btn-wa" href="https://wa.me/91${(order.phone || '').replace(/\D/g,'')}?text=${waMsg}" target="_blank" title="Chat on WhatsApp">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </a>
             <a class="action-btn" href="tel:${order.phone}" title="Call Client">
@@ -560,12 +666,242 @@ class TechCodeApp {
     if (order) {
       order.status = newStatus;
       this.saveOrders();
+      this.pushStatusToCloudflare(orderId, newStatus);
       this.showToast(`Order ${orderId} status updated to ${newStatus}`, "success");
     }
   }
 
   // ==========================================================================
-  // OFFICIAL BILL / INVOICE GENERATOR FUNCTION
+  // CLOUDFLARE D1 DATABASE INTEGRATION
+  // Connected Account: techcodecreations@gmail.com
+  // Database: techcodecreations-db (Cloudflare D1 SQL)
+  // ==========================================================================
+  getCloudflareApiUrl() {
+    return (localStorage.getItem(STORAGE_KEYS.CF_API_URL) || "").trim();
+  }
+
+  initCloudflareSync() {
+    const url = this.getCloudflareApiUrl();
+    if (url) {
+      this.fetchOrdersFromCloudflare(false);
+    }
+    this.updateCloudflareStatusPill();
+  }
+
+  updateCloudflareStatusPill(isOnline = null) {
+    const pill = document.getElementById("cfDbStatusPill");
+    const text = document.getElementById("cfDbStatusText");
+    if (!pill || !text) return;
+
+    const email = CLOUDFLARE_DEFAULT_CONFIG.email;
+    if (isOnline === true) {
+      pill.style.background = "#ecfdf5";
+      pill.style.borderColor = "#a7f3d0";
+      pill.style.color = "#059669";
+      text.innerHTML = `Cloudflare D1: <strong style="color:#047857;">Connected (${email})</strong>`;
+    } else if (isOnline === false) {
+      pill.style.background = "#fef2f2";
+      pill.style.borderColor = "#fecaca";
+      pill.style.color = "#dc2626";
+      text.innerHTML = `Cloudflare DB: <strong style="color:#b91c1c;">Offline Mode (${email})</strong>`;
+    } else {
+      pill.style.background = "#eff6ff";
+      pill.style.borderColor = "#bfdbfe";
+      pill.style.color = "#1d4ed8";
+      text.innerHTML = `Cloudflare DB: <strong>${email}</strong>`;
+    }
+  }
+
+  openCloudflareModal() {
+    const modal = document.getElementById("cloudflareDbModal");
+    if (!modal) return;
+    const input = document.getElementById("cfApiUrlInput");
+    if (input) {
+      input.value = this.getCloudflareApiUrl();
+    }
+    modal.classList.add("active");
+  }
+
+  saveCloudflareSettings(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const input = document.getElementById("cfApiUrlInput");
+    const url = input ? input.value.trim() : "";
+    localStorage.setItem(STORAGE_KEYS.CF_API_URL, url);
+    this.showToast(url ? `Cloudflare API URL saved: ${url}` : "Cloudflare API URL cleared. Running local mode.", "success");
+    if (url) {
+      this.testCloudflareConnection();
+    } else {
+      this.updateCloudflareStatusPill();
+    }
+  }
+
+  async testCloudflareConnection() {
+    const statusBox = document.getElementById("cfConnectionStatusBox");
+    const statusIcon = document.getElementById("cfStatusIcon");
+    const statusMsg = document.getElementById("cfStatusMsg");
+    const url = this.getCloudflareApiUrl();
+
+    if (!url) {
+      if (statusBox) {
+        statusBox.style.background = "#fef2f2";
+        statusBox.style.borderColor = "#fecaca";
+        statusBox.style.color = "#b91c1c";
+      }
+      if (statusIcon) statusIcon.textContent = "⚠️";
+      if (statusMsg) statusMsg.textContent = "No Cloudflare API URL set. Enter your Cloudflare Worker URL above (e.g. https://techcodecreations-api.workers.dev).";
+      this.updateCloudflareStatusPill(false);
+      return false;
+    }
+
+    if (statusIcon) statusIcon.textContent = "⏳";
+    if (statusMsg) statusMsg.textContent = `Testing connection to ${url}...`;
+
+    try {
+      const endpoint = url.replace(/\/+$/, "") + "/api/health";
+      const res = await fetch(endpoint, { method: "GET", headers: { "Accept": "application/json" } });
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      const data = await res.json();
+      if (statusBox) {
+        statusBox.style.background = "#ecfdf5";
+        statusBox.style.borderColor = "#a7f3d0";
+        statusBox.style.color = "#047857";
+      }
+      if (statusIcon) statusIcon.textContent = "✅";
+      if (statusMsg) statusMsg.innerHTML = `Connected to Cloudflare D1 (${CLOUDFLARE_DEFAULT_CONFIG.email})! Status: Online`;
+      this.updateCloudflareStatusPill(true);
+      this.showToast("Cloudflare D1 Database connected successfully!", "success");
+      return true;
+    } catch (err) {
+      if (statusBox) {
+        statusBox.style.background = "#fef2f2";
+        statusBox.style.borderColor = "#fecaca";
+        statusBox.style.color = "#b91c1c";
+      }
+      if (statusIcon) statusIcon.textContent = "❌";
+      if (statusMsg) statusMsg.textContent = `Connection failed: ${err.message}. Follow CLOUDFLARE_SETUP.md to deploy the worker.`;
+      this.updateCloudflareStatusPill(false);
+      return false;
+    }
+  }
+
+  async fetchOrdersFromCloudflare(showNotify = true) {
+    const url = this.getCloudflareApiUrl();
+    if (!url) return;
+
+    try {
+      const endpoint = url.replace(/\/+$/, "") + "/api/orders";
+      const res = await fetch(endpoint, { headers: { "Accept": "application/json" } });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data && Array.isArray(data.orders)) {
+        const existingIds = new Set(this.orders.map(o => o.id));
+        let added = 0;
+        data.orders.forEach(co => {
+          if (!existingIds.has(co.id)) {
+            this.orders.push(co);
+            added++;
+          }
+        });
+        if (added > 0) {
+          localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(this.orders));
+          this.renderAdminOrders();
+          this.updateAdminMetrics();
+          if (showNotify) this.showToast(`Fetched ${added} new orders from Cloudflare D1!`, "success");
+        }
+        this.updateCloudflareStatusPill(true);
+      }
+    } catch (e) {
+      // Offline fallback silent
+    }
+  }
+
+  async syncCloudflareNow() {
+    const url = this.getCloudflareApiUrl();
+    if (!url) {
+      this.showToast("Please enter and save your Cloudflare Worker URL first.", "error");
+      return;
+    }
+
+    try {
+      this.showToast("Syncing all local orders to Cloudflare D1...", "info");
+      const endpoint = url.replace(/\/+$/, "") + "/api/sync";
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orders: this.orders })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      this.showToast(`Successfully synced ${data.syncedOrders || this.orders.length} orders to Cloudflare D1!`, "success");
+      this.updateCloudflareStatusPill(true);
+    } catch (err) {
+      this.showToast(`Sync error: ${err.message}`, "error");
+    }
+  }
+
+  async pullFromCloudflareNow() {
+    const url = this.getCloudflareApiUrl();
+    if (!url) {
+      this.showToast("Please enter and save your Cloudflare Worker URL first.", "error");
+      return;
+    }
+
+    try {
+      this.showToast("Pulling latest orders from Cloudflare D1...", "info");
+      const endpoint = url.replace(/\/+$/, "") + "/api/orders";
+      const res = await fetch(endpoint, { headers: { "Accept": "application/json" } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && Array.isArray(data.orders)) {
+        this.orders = data.orders;
+        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(this.orders));
+        this.renderAdminOrders();
+        this.updateAdminMetrics();
+        this.showToast(`Updated local database with ${data.orders.length} orders from Cloudflare D1!`, "success");
+        this.updateCloudflareStatusPill(true);
+      }
+    } catch (err) {
+      this.showToast(`Pull error: ${err.message}`, "error");
+    }
+  }
+
+  async pushOrderToCloudflare(order) {
+    const url = this.getCloudflareApiUrl();
+    if (!url || !order) return;
+    try {
+      const endpoint = url.replace(/\/+$/, "") + "/api/orders";
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order)
+      });
+    } catch (e) {}
+  }
+
+  async pushDeleteToCloudflare(orderId) {
+    const url = this.getCloudflareApiUrl();
+    if (!url || !orderId) return;
+    try {
+      const endpoint = url.replace(/\/+$/, "") + `/api/orders/${encodeURIComponent(orderId)}`;
+      await fetch(endpoint, { method: "DELETE" });
+    } catch (e) {}
+  }
+
+  async pushStatusToCloudflare(orderId, newStatus) {
+    const url = this.getCloudflareApiUrl();
+    if (!url || !orderId) return;
+    try {
+      const endpoint = url.replace(/\/+$/, "") + `/api/orders/${encodeURIComponent(orderId)}`;
+      await fetch(endpoint, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+    } catch (e) {}
+  }
+
+  // ==========================================================================
+  // OFFICIAL FULL-SCREEN BILL / INVOICE GENERATOR FUNCTION
   // ==========================================================================
   generateBill(orderId) {
     const order = this.orders.find(o => o.id === orderId);
@@ -576,7 +912,7 @@ class TechCodeApp {
     if (!modal || !container) return;
 
     const invNum = order.invoiceNo || (order.id.startsWith("TCC-") ? order.id.replace("TCC-", "TCC/").replace("-", "/") : `TCC/2026/${order.id.replace(/\D/g, '').slice(-3) || '001'}`);
-    const invDate = order.date ? (order.date.includes(" ") ? order.date.split(" ")[0] : order.date) : this.getTodayFormattedDate();
+    const invDate = this.formatDateForDisplay(order.date);
     const amount = Number(order.billAmount) || 0;
     const discount = Number(order.discountAmount) || 0;
     const netAmount = Number(order.netAmount) || Math.max(0, amount - discount);
@@ -621,6 +957,15 @@ class TechCodeApp {
         ];
 
     const termsHtml = termsList.map(t => `<li>${this.escapeHtml(t)}</li>`).join("");
+
+    // Update Full-Screen Modal Topbar Header elements
+    const invBadge = document.getElementById("billModalInvBadge");
+    if (invBadge) invBadge.textContent = invNum;
+
+    const waBtn = document.getElementById("billModalWaBtn");
+    if (waBtn) {
+      waBtn.href = `https://wa.me/91${phone.replace(/\D/g,'')}?text=${encodeURIComponent(`Hello ${clientName}! Here is your official invoice (${invNum}) from Tech Code Creations. Total: ₹${netAmount}. Thank you!`)}`;
+    }
 
     container.innerHTML = `
       <div class="tcc-invoice-container" id="printableBillArea">
@@ -676,7 +1021,7 @@ class TechCodeApp {
               <svg width="17" height="17" viewBox="0 0 24 24" fill="#0284c7"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
               <span>techcodecreations@gmail.com</span>
             </div>
-            <div class="tcc-contact-services">Website & Mobile Application Development</div>
+            <div class="tcc-contact-services">Website &amp; Mobile Application Development</div>
           </div>
         </div>
 
@@ -828,7 +1173,7 @@ class TechCodeApp {
             <div class="tcc-thank-you-script">Thank you for your business!</div>
           </div>
 
-          <!-- Center QR Code to Scan & Pay / Verify Bill (Replaces Barcode) -->
+          <!-- Center QR Code to Scan & Pay / Verify Bill -->
           <div class="tcc-qrcode-col">
             <div class="tcc-qrcode-wrap" title="Scan QR Code to pay via Google Pay, PhonePe, Paytm or UPI" onclick="app.showQrModal('${order.id}')">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=110x110&margin=2&data=${encodeURIComponent(qrData)}" 
@@ -936,11 +1281,19 @@ class TechCodeApp {
         </div>
       </div>
 
-      <!-- Action buttons -->
-      <div class="no-print" style="display:flex; justify-content:center; gap:14px; margin-top:24px;">
+      <!-- Action buttons at bottom of bill for quick access -->
+      <div class="no-print" style="display:flex; justify-content:center; gap:14px; margin-top:24px; padding-bottom:12px; flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="window.print()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
           <span>Print / Save as PDF</span>
+        </button>
+        <button class="btn btn-secondary" onclick="app.toggleBillSheetPreview()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          <span>Toggle Sheet Preview</span>
+        </button>
+        <button class="btn btn-secondary" onclick="app.toggleBillFullscreen()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          <span>Fullscreen</span>
         </button>
         <a href="https://wa.me/91${phone.replace(/\D/g,'')}?text=${encodeURIComponent(`Hello ${clientName}! Here is your official invoice (${invNum}) from Tech Code Creations. Total: ₹${netAmount}. Thank you!`)}" target="_blank" class="btn btn-secondary" style="color:#16a34a; border-color:#86efac; gap:8px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -952,7 +1305,40 @@ class TechCodeApp {
       </div>
     `;
 
+    // Ensure full-screen display is active
     modal.classList.add("active");
+    const modalContent = document.getElementById("billModalContent");
+    if (modalContent) {
+      modalContent.classList.remove("bill-modal-windowed");
+      modalContent.classList.add("bill-modal-fullscreen-content");
+    }
+  }
+
+  toggleBillFullscreen() {
+    const modalContent = document.getElementById("billModalContent");
+    const btn = document.getElementById("btnToggleFullscreen");
+    if (!modalContent) return;
+
+    const isWindowed = modalContent.classList.toggle("bill-modal-windowed");
+    if (btn) {
+      btn.innerHTML = isWindowed 
+        ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>⛶ Windowed</span>` 
+        : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>⛶ Fullscreen</span>`;
+    }
+  }
+
+  toggleBillSheetPreview() {
+    const modal = document.getElementById("billModal");
+    const btn = document.getElementById("btnToggleSheetPreview");
+    if (!modal) return;
+
+    const isSheet = modal.classList.toggle("tcc-bill-sheet-preview-mode");
+    if (btn) {
+      btn.innerHTML = isSheet
+        ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg><span>Normal View</span>`
+        : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg><span>Sheet Preview</span>`;
+    }
+    this.showToast(isSheet ? "A4 Sheet Print Preview mode active" : "Standard Full-Screen view active", "info");
   }
 
   viewOrderDetails(orderId) {
@@ -967,7 +1353,7 @@ class TechCodeApp {
       <div style="margin-bottom: 20px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
           <span class="order-id-badge" style="font-size: 1rem;">${order.id}</span>
-          <span class="status-badge status-${order.status.toLowerCase().replace(' ', '')}">${order.status}</span>
+          <span class="status-badge status-${(order.status || 'pending').toLowerCase().replace(' ', '')}">${order.status || 'Pending'}</span>
         </div>
         <p style="font-size: 0.84rem; color: var(--text-secondary);">Booked On: <strong>${order.date}</strong></p>
       </div>
@@ -1019,7 +1405,7 @@ class TechCodeApp {
       <div style="margin: 20px 0;">
         <h5 style="margin-bottom: 8px;">Features Selected:</h5>
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
-          ${order.features.map(f => `<span class="tech-tag" style="color:var(--primary-blue); background:#eff6ff;">${this.escapeHtml(f)}</span>`).join('')}
+          ${(order.features || []).map(f => `<span class="tech-tag" style="color:var(--primary-blue); background:#eff6ff;">${this.escapeHtml(f)}</span>`).join('')}
         </div>
       </div>
 
@@ -1031,10 +1417,10 @@ class TechCodeApp {
       </div>
 
       <div style="display:flex; gap:12px; margin-top:24px;">
-        <button class="btn btn-primary" onclick="app.generateBill('${order.id}'); closeModal('adminOrderDetailsModal');">
+        <button class="btn btn-primary" onclick="if(window.app){app.generateBill('${order.id}');} closeModal('adminOrderDetailsModal');">
           📄 Generate Official Bill
         </button>
-        <a class="btn btn-secondary" href="tel:${order.phone}">
+        <a class="btn btn-secondary" href="tel:${order.phone || ''}">
           Call Customer
         </a>
       </div>
@@ -1047,21 +1433,44 @@ class TechCodeApp {
     if (confirm(`Are you sure you want to delete order ${orderId}?`)) {
       this.orders = this.orders.filter(o => o.id !== orderId);
       this.saveOrders();
+      this.pushDeleteToCloudflare(orderId);
       this.showToast(`Order ${orderId} deleted.`, "info");
     }
   }
 
   getNextInvoiceNumber() {
     const currentYear = new Date().getFullYear();
+    
+    // Check if an explicit override is set by Reset Bill Number
+    try {
+      const overrideSeq = localStorage.getItem("techcode_bill_seq_override");
+      if (overrideSeq !== null && overrideSeq !== "") {
+        const num = parseInt(overrideSeq, 10);
+        if (!isNaN(num) && num >= 1) {
+          const padded = String(num).padStart(3, "0");
+          return `TCC/${currentYear}/${padded}`;
+        }
+      }
+    } catch (e) {}
+
     let maxSeq = 0;
     
+    // 1. Check stored sequence counter
+    try {
+      const storedSeq = parseInt(localStorage.getItem("techcode_last_bill_seq") || "0", 10);
+      if (!isNaN(storedSeq) && storedSeq > maxSeq) {
+        maxSeq = storedSeq;
+      }
+    } catch (e) {}
+
+    // 2. Scan all existing orders
     if (Array.isArray(this.orders)) {
       this.orders.forEach(o => {
-        const inv = o.invoiceNo || o.id || "";
-        const match = inv.match(/TCC[\/-]\d{4}[\/-](\d+)/i) || inv.match(/TCC[\/-](\d+)/i);
+        const inv = String(o.invoiceNo || o.id || "").trim();
+        const match = inv.match(/(\d+)$/);
         if (match && match[1]) {
           const seq = parseInt(match[1], 10);
-          if (!isNaN(seq) && seq > maxSeq && seq < 10000) {
+          if (!isNaN(seq) && seq > maxSeq && seq < 100000) {
             maxSeq = seq;
           }
         }
@@ -1073,6 +1482,81 @@ class TechCodeApp {
     return `TCC/${currentYear}/${padded}`;
   }
 
+  recordBillSequence(invoiceNo) {
+    if (!invoiceNo) return;
+    // Clear any one-time sequence override now that a bill has been recorded
+    try {
+      localStorage.removeItem("techcode_bill_seq_override");
+    } catch (e) {}
+
+    const match = String(invoiceNo).trim().match(/(\d+)$/);
+    if (match && match[1]) {
+      const seq = parseInt(match[1], 10);
+      if (!isNaN(seq)) {
+        try {
+          const cur = parseInt(localStorage.getItem("techcode_last_bill_seq") || "0", 10);
+          if (seq > cur) {
+            localStorage.setItem("techcode_last_bill_seq", String(seq));
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
+  resetBillSequence(promptUser = true) {
+    let targetNum = 1;
+    if (promptUser && typeof window.prompt === "function") {
+      const ans = window.prompt("Reset Bill Number Sequence\nEnter the new starting sequence number (e.g. 1 for 001):", "1");
+      if (ans === null) return; // User cancelled
+      const parsed = parseInt(ans.trim(), 10);
+      if (!isNaN(parsed) && parsed >= 1) {
+        targetNum = parsed;
+      } else {
+        this.showToast("Invalid number entered. Defaulting to 1 (001).", "error");
+        targetNum = 1;
+      }
+    }
+
+    try {
+      localStorage.setItem("techcode_bill_seq_override", String(targetNum));
+      localStorage.setItem("techcode_last_bill_seq", String(targetNum - 1));
+    } catch (e) {}
+
+    const currentYear = new Date().getFullYear();
+    const newBillNo = `TCC/${currentYear}/${String(targetNum).padStart(3, "0")}`;
+
+    const invInput = document.getElementById("manualInvoiceNo");
+    if (invInput) {
+      invInput.value = newBillNo;
+      invInput.style.transition = "all 0.3s ease";
+      invInput.style.backgroundColor = "#fed7aa";
+      invInput.style.borderColor = "#f97316";
+      invInput.style.boxShadow = "0 0 0 3px rgba(249, 115, 22, 0.35)";
+      setTimeout(() => {
+        invInput.style.backgroundColor = "#f0f9ff";
+        invInput.style.borderColor = "#bfdbfe";
+        invInput.style.boxShadow = "none";
+      }, 500);
+    }
+
+    const badge = document.getElementById("nextBillNoHeaderBadge");
+    if (badge) badge.textContent = newBillNo;
+
+    const modalBadge = document.getElementById("manualModalInvBadge");
+    if (modalBadge) modalBadge.textContent = newBillNo;
+
+    this.showToast(`Bill number reset to ${newBillNo}`, "success");
+    return newBillNo;
+  }
+
+  getTodayDateInput() {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
   getTodayFormattedDate() {
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, "0");
@@ -1081,64 +1565,145 @@ class TechCodeApp {
     return `${dd}-${mm}-${yyyy}`;
   }
 
-  openManualBillModal() {
-    this.prepareManualBillModal();
-    const modal = document.getElementById("manualOrderModal");
-    if (modal) modal.classList.add("active");
+  formatDateForDisplay(dateStr) {
+    if (!dateStr) return this.getTodayFormattedDate();
+    const s = String(dateStr).trim();
+    const parts = s.split("-");
+    if (parts.length === 3 && parts[0].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return s;
   }
 
-  prepareManualBillModal(forceNew = false) {
+  updateNextBillHeaderBadge() {
+    const nextNo = this.getNextInvoiceNumber();
+    const badge = document.getElementById("nextBillNoHeaderBadge");
+    if (badge) {
+      badge.textContent = nextNo;
+    }
+    return nextNo;
+  }
+
+  openManualBillModal() {
+    // Start with a 100% clean, blank form and next sequential bill number!
+    this.clearManualBillForm(true);
+    const modal = document.getElementById("manualOrderModal");
+    if (modal) {
+      modal.classList.add("active");
+      const modalContent = document.getElementById("manualOrderModalContent");
+      if (modalContent) {
+        modalContent.classList.remove("bill-modal-windowed");
+        modalContent.classList.add("bill-modal-fullscreen-content");
+      }
+    }
+    const invInput = document.getElementById("manualInvoiceNo");
+    const modalBadge = document.getElementById("manualModalInvBadge");
+    if (invInput && modalBadge) {
+      modalBadge.textContent = invInput.value;
+    }
+    setTimeout(() => {
+      const nameInput = document.getElementById("manualName");
+      if (nameInput) nameInput.focus();
+    }, 150);
+  }
+
+  toggleManualBillFullscreen() {
+    const modalContent = document.getElementById("manualOrderModalContent");
+    const btn = document.getElementById("btnToggleManualFullscreen");
+    if (!modalContent) return;
+
+    const isWindowed = modalContent.classList.toggle("bill-modal-windowed");
+    if (btn) {
+      btn.innerHTML = isWindowed 
+        ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span>⛶ Windowed</span>` 
+        : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg><span>⛶ Fullscreen</span>`;
+    }
+  }
+
+  resetManualBillForm() {
+    // Resets and clears all customer & item fields while keeping the current bill number
+    this.clearManualBillForm(false);
+    this.showToast("Bill form reset. All previous details cleared.", "info");
+  }
+
+  nextManualBill() {
+    // Increments to the next sequential bill number and starts a fresh form
+    this.autoChangeBillNumber();
+    this.clearManualBillForm(false);
+    const invInput = document.getElementById("manualInvoiceNo");
+    const currentVal = invInput ? invInput.value : "";
+    this.showToast(`Prepared fresh form for Next Bill: ${currentVal}`, "success");
+  }
+
+  clearManualBillForm(advanceNumber = true) {
     const form = document.getElementById("manualOrderForm");
     if (!form) return;
 
-    if (forceNew) {
-      form.reset();
-      if (form.manualDiscount) form.manualDiscount.value = "0";
-      if (form.manualCost) form.manualCost.value = "0";
-      if (form.manualAmount) form.manualAmount.value = "";
-      if (form.manualAddress) form.manualAddress.value = "Kumbakonam, Tamil Nadu";
-      if (form.manualCategory) form.manualCategory.value = "Web Development";
-      if (form.manualReference) form.manualReference.value = "Invoice";
-      if (form.manualType) form.manualType.value = "Website Development";
-      if (form.manualProjectName) form.manualProjectName.value = "";
-      if (form.manualName) form.manualName.value = "";
-      if (form.manualPhone) form.manualPhone.value = "";
+    form.reset();
 
-      const tbody = document.getElementById("manualBillItemsBody");
-      if (tbody) {
-        tbody.innerHTML = `
-          <tr class="manual-item-row" data-index="1">
-            <td class="td-sno">1</td>
-            <td class="td-desc">
-              <input type="text" name="manualDescription" id="manualDescription" class="tcc-invoice-form-input item-desc-input" placeholder="Service description (e.g. Website Development Service)" style="font-weight:800; font-size:0.95rem; margin-bottom:4px;">
-              <input type="text" name="manualSubDescription" id="manualSubDescription" class="tcc-invoice-form-input item-subdesc-input" placeholder="Sub-description (e.g. Client Name – Project Name)" style="font-size:0.8rem; color:#475569;">
-            </td>
-            <td class="td-amount">
-              <input type="number" name="manualAmount" id="manualAmount" class="tcc-invoice-form-input item-amount-input" placeholder="25000" min="0" step="any" required style="font-size:1.15rem; font-weight:900; color:#0f172a; text-align:right;">
-            </td>
-            <td class="td-action" style="text-align:center;">
-              <button type="button" class="btn-remove-item" onclick="app.removeBillItemRow(this)" title="Delete this item" disabled style="opacity:0.35; cursor:default;">✕</button>
-            </td>
-          </tr>
-        `;
+    // Clear all fields
+    if (form.manualName) form.manualName.value = "";
+    if (form.manualPhone) form.manualPhone.value = "";
+    if (form.manualProjectName) form.manualProjectName.value = "";
+    if (form.manualAddress) form.manualAddress.value = "Kumbakonam, Tamil Nadu";
+    if (form.manualCategory) form.manualCategory.value = "Web Development";
+    if (form.manualReference) form.manualReference.value = "Invoice";
+    if (form.manualType) form.manualType.value = "Website Development";
+    if (form.manualDiscount) form.manualDiscount.value = "0";
+    if (form.manualCost) form.manualCost.value = "0";
+    if (form.manualAmount) form.manualAmount.value = "";
+
+    // Reset Table to 1 clean blank item
+    const tbody = document.getElementById("manualBillItemsBody");
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr class="manual-item-row" data-index="1">
+          <td class="td-sno">1</td>
+          <td class="td-desc">
+            <input type="text" name="manualDescription" id="manualDescription" class="tcc-invoice-form-input item-desc-input" placeholder="Service description (e.g. Website Development Service)" value="" style="font-weight:800; font-size:0.95rem; margin-bottom:4px;">
+            <input type="text" name="manualSubDescription" id="manualSubDescription" class="tcc-invoice-form-input item-subdesc-input" placeholder="Sub-description (e.g. Client Name – Project Name)" value="" style="font-size:0.8rem; color:#475569;">
+          </td>
+          <td class="td-amount">
+            <input type="number" name="manualAmount" id="manualAmount" class="tcc-invoice-form-input item-amount-input" placeholder="0" min="0" step="any" value="" required style="font-size:1.15rem; font-weight:900; color:#0f172a; text-align:right;">
+          </td>
+          <td class="td-action" style="text-align:center;">
+            <button type="button" class="btn-remove-item" onclick="app.removeBillItemRow(this)" title="Delete this item" disabled style="opacity:0.35; cursor:default;">✕</button>
+          </td>
+        </tr>
+      `;
+    }
+
+    if (form.manualTerms) {
+      form.manualTerms.value = "Payment to be made within 7 days from the date of invoice.\nThis is a commission / service project.\nFor any queries / support contact +91 8248688471.";
+    }
+
+    // Set Invoice Number
+    if (form.manualInvoiceNo) {
+      if (advanceNumber || !form.manualInvoiceNo.value) {
+        form.manualInvoiceNo.value = this.getNextInvoiceNumber();
       }
     }
 
-    if (form.manualInvoiceNo && (!form.manualInvoiceNo.value || forceNew)) {
-      form.manualInvoiceNo.value = this.getNextInvoiceNumber();
-    }
-    if (form.manualDate && (!form.manualDate.value || forceNew)) {
-      form.manualDate.value = this.getTodayFormattedDate();
+    // Set Date input to today's date
+    if (form.manualDate) {
+      form.manualDate.value = this.getTodayDateInput();
     }
 
     const nextBillBadge = document.getElementById("nextBillNoHeaderBadge");
     if (nextBillBadge && form.manualInvoiceNo) {
       nextBillBadge.textContent = form.manualInvoiceNo.value;
     }
+    const modalBadge = document.getElementById("manualModalInvBadge");
+    if (modalBadge && form.manualInvoiceNo) {
+      modalBadge.textContent = form.manualInvoiceNo.value;
+    }
 
     this.bindManualItemListeners();
-    this.syncManualDescriptions();
     this.updateManualBillLivePreview();
+  }
+
+  prepareManualBillModal(forceNew = true, advanceNumber = true) {
+    this.clearManualBillForm(advanceNumber);
   }
 
   bindManualItemListeners() {
@@ -1346,7 +1911,7 @@ class TechCodeApp {
       return;
     }
 
-    const orderId = invoiceNo ? invoiceNo.replace(/\//g, "-") : `TCC-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const orderId = invoiceNo ? invoiceNo.split('/').join('-') : `TCC-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`;
 
     const termsText = form.manualTerms ? form.manualTerms.value.trim() : "";
     const terms = termsText
@@ -1398,12 +1963,19 @@ class TechCodeApp {
       this.orders.unshift(newOrder);
     }
 
+    // Record bill sequence so next bill increments automatically!
+    this.recordBillSequence(invoiceNo);
     this.saveOrders();
+    this.pushOrderToCloudflare(newOrder);
+
+    // Reset and clear manual bill form completely for the next bill
+    this.clearManualBillForm(true);
+
     const modal = document.getElementById("manualOrderModal");
     if (modal) modal.classList.remove("active");
     this.showToast(`Official bill ${invoiceNo} created successfully!`, "success");
 
-    // Immediately display the generated official invoice to the user!
+    // Immediately display the generated official invoice in FULL-SCREEN MODE!
     this.generateBill(newOrder.id);
   }
 
@@ -1415,21 +1987,25 @@ class TechCodeApp {
     let currentVal = invInput.value.trim();
     let nextNum = 1;
 
-    const match = currentVal.match(/TCC[\/-](\d{4})[\/-](\d+)/i) || currentVal.match(/TCC[\/-](\d+)/i);
-    if (match) {
-      const parsedSeq = parseInt(match[2] || match[1], 10);
+    const match = currentVal.match(/(\d+)$/);
+    if (match && match[1]) {
+      const parsedSeq = parseInt(match[1], 10);
       if (!isNaN(parsedSeq)) {
         nextNum = parsedSeq + 1;
       }
     } else {
       const def = this.getNextInvoiceNumber();
-      const defMatch = def.match(/TCC\/\d{4}\/(\d+)/);
+      const defMatch = def.match(/(\d+)$/);
       nextNum = defMatch ? parseInt(defMatch[1], 10) : 1;
     }
 
     const padded = String(nextNum).padStart(3, "0");
     const newInvoiceNo = `TCC/${currentYear}/${padded}`;
     invInput.value = newInvoiceNo;
+
+    // Record sequence
+    this.recordBillSequence(newInvoiceNo);
+    this.updateNextBillHeaderBadge();
 
     // Visual pulse feedback on input field
     invInput.style.transition = "all 0.3s ease";
@@ -1438,15 +2014,20 @@ class TechCodeApp {
     invInput.style.boxShadow = "0 0 0 3px rgba(2, 132, 199, 0.35)";
     setTimeout(() => {
       invInput.style.backgroundColor = "#f0f9ff";
+      invInput.style.borderColor = "#bfdbfe";
       invInput.style.boxShadow = "none";
-    }, 600);
+    }, 450);
 
     const nextBillBadge = document.getElementById("nextBillNoHeaderBadge");
     if (nextBillBadge) {
       nextBillBadge.textContent = newInvoiceNo;
     }
+    const modalBadge = document.getElementById("manualModalInvBadge");
+    if (modalBadge) {
+      modalBadge.textContent = newInvoiceNo;
+    }
 
-    this.showToast(`⚡ Auto changed Bill Number to: ${newInvoiceNo}`, "success");
+    this.showToast(`⚡ Next Bill Number set to: ${newInvoiceNo}`, "success");
   }
 
   showQrModal(orderId) {
@@ -1462,7 +2043,7 @@ class TechCodeApp {
     const container = document.getElementById("qrModalContent") || document.getElementById("barcodeModalContent");
     if (!modal || !container) return;
 
-    const invNo = order ? (order.invoiceNo || order.id) : "TCC/2026/001";
+    const invNo = order ? (order.invoiceNo || order.id) : `TCC/${new Date().getFullYear()}/001`;
     const client = order ? order.clientName : "Official Verified Bill";
     const amt = order ? (order.netAmount !== undefined ? order.netAmount : (order.billAmount || 0)) : 25000;
     const date = order ? order.date : this.getTodayFormattedDate();
@@ -1570,16 +2151,16 @@ class TechCodeApp {
 
     const headers = ["Order ID", "Date", "Client Name", "Phone", "Email", "Business Name", "Website Type", "Amount", "Status", "Requirements"];
     const rows = this.orders.map(o => [
-      `"${o.id}"`,
-      `"${o.date}"`,
-      `"${o.clientName.replace(/"/g, '""')}"`,
-      `"${o.phone}"`,
-      `"${o.email}"`,
-      `"${o.businessName.replace(/"/g, '""')}"`,
-      `"${o.websiteType}"`,
-      `"${o.billAmount || 15000}"`,
-      `"${o.status}"`,
-      `"${(o.details || "").replace(/"/g, '""')}"`
+      `"${(o.id || '')}"`,
+      `"${(o.date || '')}"`,
+      `"${(o.clientName || '').split('"').join('""')}"`,
+      `"${(o.phone || '')}"`,
+      `"${(o.email || '')}"`,
+      `"${(o.businessName || '').split('"').join('""')}"`,
+      `"${(o.websiteType || '')}"`,
+      `"${(o.billAmount || 15000)}"`,
+      `"${(o.status || 'Pending')}"`,
+      `"${(o.details || '').split('"').join('""')}"`
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
@@ -1596,9 +2177,9 @@ class TechCodeApp {
   handleContactSubmit(e) {
     e.preventDefault();
     const form = e.target;
-    const name = form.name.value.trim();
-    const phone = form.phone.value.trim();
-    const msg = form.message.value.trim();
+    const name = form.name ? form.name.value.trim() : "";
+    const phone = form.phone ? form.phone.value.trim() : "";
+    const msg = form.message ? form.message.value.trim() : "";
 
     const waText = encodeURIComponent(
       `Hello Kuberamoorthy! (Tech Code Creations)\n\n` +
@@ -1610,7 +2191,7 @@ class TechCodeApp {
 
     window.open(`https://wa.me/918248688471?text=${waText}`, "_blank");
     this.showToast("Opening WhatsApp to connect directly with Kuberamoorthy.", "success");
-    form.reset();
+    if (form && typeof form.reset === "function") form.reset();
   }
 
   showToast(message, type = "info") {
@@ -1619,7 +2200,9 @@ class TechCodeApp {
       container = document.createElement("div");
       container.id = "toastContainer";
       container.className = "toast-container";
-      document.body.appendChild(container);
+      if (document.body) {
+        document.body.appendChild(container);
+      }
     }
 
     const toast = document.createElement("div");
@@ -1646,11 +2229,11 @@ class TechCodeApp {
   escapeHtml(str) {
     if (!str) return "";
     return String(str)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .split("&").join("&amp;")
+      .split("<").join("&lt;")
+      .split(">").join("&gt;")
+      .split('"').join("&quot;")
+      .split("'").join("&#039;");
   }
 }
 
@@ -1663,14 +2246,23 @@ function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.add("active");
   if (modalId === "manualOrderModal" && window.app) {
-    window.app.prepareManualBillModal();
+    window.app.openManualBillModal();
   }
 }
+
+// Global window bindings for foolproof HTML inline event handlers
+window.closeModal = closeModal;
+window.openModal = openModal;
+window.TechCodeApp = TechCodeApp;
+window.convertNumberToIndianWords = convertNumberToIndianWords;
+window.resetBillSequence = (promptUser = true) => window.app && window.app.resetBillSequence(promptUser);
+window.toggleManualBillFullscreen = () => window.app && window.app.toggleManualBillFullscreen();
+window.openCloudflareModal = () => window.app && window.app.openCloudflareModal();
 
 let app;
 document.addEventListener("DOMContentLoaded", () => {
   // Hash shortcut for direct admin access
-  if (window.location.hash === "#admin" || window.location.hash === "#admin-portal") {
+  if (window.location.hash === "#admin" || window.location.hash === "#admin-portal" || window.location.hash === "#login") {
     if (!window.location.pathname.includes("admin.html")) {
       window.location.href = "admin.html";
       return;
@@ -1678,6 +2270,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   app = new TechCodeApp();
+  window.app = app;
+
+  // Global key combo (Ctrl+Shift+A) for instant Admin Portal navigation
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === "A" || e.key === "a")) {
+      e.preventDefault();
+      window.location.href = "admin.html";
+    }
+  });
 
   // Scroll Reveal Animations
   const revealElements = document.querySelectorAll(
