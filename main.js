@@ -751,10 +751,14 @@ class TechCodeApp {
     const customUrl = this.getCleanApiUrl();
     if (!customUrl || !this.orders || this.orders.length === 0) return;
     try {
+      const sanitizedOrders = this.orders.map(o => ({
+        ...o,
+        terms: Array.isArray(o.terms) ? o.terms.join("\n") : (o.terms || "")
+      }));
       const res = await fetch(`${customUrl}/api/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orders: this.orders })
+        body: JSON.stringify({ orders: sanitizedOrders })
       });
       if (res.ok && showNotify) {
         this.showToast(`✅ Synced ${this.orders.length} orders to Cloudflare D1 Database!`, "success");
@@ -997,10 +1001,14 @@ class TechCodeApp {
     const customUrl = this.getCleanApiUrl();
     if (customUrl) {
       try {
+        const sanitizedOrders = this.orders.map(o => ({
+          ...o,
+          terms: Array.isArray(o.terms) ? o.terms.join("\n") : (o.terms || "")
+        }));
         const res = await fetch(`${customUrl}/api/sync`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orders: this.orders })
+          body: JSON.stringify({ orders: sanitizedOrders })
         });
         if (res.ok) {
           this.updateCloudflareStatusPill(true);
@@ -1072,13 +1080,18 @@ class TechCodeApp {
     const customUrl = this.getCleanApiUrl();
     if (customUrl) {
       try {
+        const payload = {
+          ...order,
+          terms: Array.isArray(order.terms) ? order.terms.join("\n") : (order.terms || "")
+        };
         const res = await fetch(`${customUrl}/api/orders`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(order)
+          body: JSON.stringify(payload)
         });
         if (res.ok) {
-          this.showToast(`☁️ Bill ${order.invoiceNo || order.id} saved in Cloudflare D1 Database!`, "success");
+          const result = await res.json().catch(() => ({}));
+          this.showToast(`☁️ Bill ${order.invoiceNo || order.id} saved in Cloudflare Database!`, "success");
           return true;
         } else if (res.status === 404) {
           this.showToast(`Bill saved locally. To sync to Cloudflare D1, paste worker.js in dash.cloudflare.com.`, "info");
