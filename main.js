@@ -687,7 +687,14 @@ class TechCodeApp {
   // Connected Account: techcodecreations@gmail.com
   // ==========================================================================
   getCloudflareApiUrl() {
-    return (localStorage.getItem(STORAGE_KEYS.CF_API_URL) || CLOUD_DB_CONFIG.defaultEndpoint).trim();
+    let stored = (localStorage.getItem(STORAGE_KEYS.CF_API_URL) || "").trim();
+    if (!stored || stored === "https://techcodecreations-api.workers.dev" || !stored.includes("techcodecreations.workers.dev")) {
+      stored = CLOUD_DB_CONFIG.defaultEndpoint;
+      try {
+        localStorage.setItem(STORAGE_KEYS.CF_API_URL, stored);
+      } catch (e) {}
+    }
+    return stored;
   }
 
   getCleanApiUrl() {
@@ -703,9 +710,14 @@ class TechCodeApp {
   }
 
   initCloudflareSync() {
-    if (!localStorage.getItem(STORAGE_KEYS.CF_API_KEY)) {
-      localStorage.setItem(STORAGE_KEYS.CF_API_KEY, CLOUD_DB_CONFIG.apiKey);
-    }
+    const activeUrl = this.getCloudflareApiUrl();
+    try {
+      localStorage.setItem(STORAGE_KEYS.CF_API_URL, activeUrl);
+      if (!localStorage.getItem(STORAGE_KEYS.CF_API_KEY)) {
+        localStorage.setItem(STORAGE_KEYS.CF_API_KEY, CLOUD_DB_CONFIG.apiKey);
+      }
+    } catch (e) {}
+
     this.updateCloudflareStatusPill(true);
 
     // Initialize real-time cross-tab & cross-window sync channel
@@ -724,11 +736,30 @@ class TechCodeApp {
       }
     } catch (e) {}
 
-    // Only start cloud poller if a custom Cloudflare Worker URL is configured
+    // Pull from live Cloudflare D1 and sync local orders to D1
     if (this.getCleanApiUrl()) {
-      this.fetchOrdersFromCloud(false);
+      this.fetchOrdersFromCloud(false).then(() => {
+        if (this.orders && this.orders.length > 0) {
+          this.syncLocalOrdersToCloudflare(false);
+        }
+      });
       this.startLiveCloudPoller();
     }
+  }
+
+  async syncLocalOrdersToCloudflare(showNotify = true) {
+    const customUrl = this.getCleanApiUrl();
+    if (!customUrl || !this.orders || this.orders.length === 0) return;
+    try {
+      const res = await fetch(`${customUrl}/api/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orders: this.orders })
+      });
+      if (res.ok && showNotify) {
+        this.showToast(`✅ Synced ${this.orders.length} orders to Cloudflare D1 Database!`, "success");
+      }
+    } catch (e) {}
   }
 
   startLiveCloudPoller() {

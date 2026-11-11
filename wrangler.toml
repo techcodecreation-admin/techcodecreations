@@ -1,21 +1,13 @@
 # ==============================================================================
 # TECH CODE CREATIONS - CLOUDFLARE CONFIGURATION
 # Account: techcodecreations@gmail.com
+# Account ID: f2c0ce87ede42ef8361f77cce8f82943
 # ==============================================================================
 
 name = "techcodecreations-api"
 main = "worker.js"
 compatibility_date = "2024-09-23"
-
-# Cloudflare D1 Database Binding
-[[d1_databases]]
-binding = "DB"
-database_name = "techcodecreations-db"
-database_id = "techcodecreations-db-id"
-
-# Static assets serving (Optional: can serve the whole website directly from Cloudflare)
-# [site]
-# bucket = "./"
+account_id = "f2c0ce87ede42ef8361f77cce8f82943"
 
 # Environment Variables
 [vars]
@@ -23,3 +15,11 @@ ADMIN_EMAIL = "techcodecreations@gmail.com"
 AGENCY_NAME = "Tech Code Creations"
 FOUNDER = "KUBERAMOORTHY S"
 
+# D1 Database Binding Note:
+# To prevent automated build failures, link your D1 database directly in Cloudflare:
+# Worker Settings > Bindings > Add > D1 Database > Name: DB > Select: techcodecreations-db
+# OR uncomment below and replace with your exact D1 UUID from dash.cloudflare.com > D1:
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "techcodecreations-db"
+# database_id = "PASTE_YOUR_D1_UUID_HERE"

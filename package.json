@@ -1,0 +1,13 @@
+{
+  "name": "techcodecreations-api",
+  "version": "1.0.0",
+  "description": "Tech Code Creations Cloudflare Worker & D1 Database API",
+  "main": "worker.js",
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.80.0"
+  }
+}
+
