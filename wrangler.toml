@@ -19,7 +19,6 @@ FOUNDER = "KUBERAMOORTHY S"
 # To prevent automated build failures, link your D1 database directly in Cloudflare:
 # Worker Settings > Bindings > Add > D1 Database > Name: DB > Select: techcodecreations-db
 # OR uncomment below and replace with your exact D1 UUID from dash.cloudflare.com > D1:
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "techcodecreations-db"
-# database_id = "PASTE_YOUR_D1_UUID_HERE"
+[[d1_databases]]
+binding = "MY_BINDING"
+database_id = "9c76815f-4419-4b19-afb1-c4bb535e0d49"
