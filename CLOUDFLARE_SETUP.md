@@ -28,35 +28,36 @@
 
 ---
 
-### Step 3: Create the Cloudflare Worker API
+### Step 3: Paste worker.js Code into your Worker
 1. In the left sidebar, click **Workers & Pages**.
-2. Click **Create Application** (or **Create**) > select **Worker**.
-3. Name it: **`techcodecreations-api`**.
-4. Click **Deploy**.
-5. On the success screen, click **Edit code** (this opens Cloudflare's online code editor in your browser).
-6. Delete the starter code, copy & paste the contents of `worker.js` (or click **Copy worker.js Code** in Admin Portal).
-7. Click the blue **Deploy** button in the top right.
+2. Click on your worker: **`techcodecreations-api`**.
+3. Click the **Edit code** button (this opens Cloudflare's online code editor in your browser).
+4. Delete all existing code in the editor.
+5. Copy and paste all the code from **`worker.js`** (or click **📋 Copy worker.js Code** in your Admin Portal).
+6. Click the blue **Deploy** button in the top right.
 
 ---
 
-### Step 4: Connect the Database to your Worker
-1. Go back to your Worker dashboard page for `techcodecreations-api`.
-2. Click the **Settings** tab.
-3. Click **Bindings** (or **Variables and Secrets** > **Bindings**).
+### Step 4: Link your D1 Database to the Worker (Binding)
+1. Go back to your Worker page for **`techcodecreations-api`**.
+2. Click the **Settings** tab at the top.
+3. Click **Bindings** in the left sub-menu.
 4. Click **Add** > select **D1 Database**.
 5. Set:
-   - **Variable name:** `DB` *(must be exactly uppercase `DB`)*
-   - **D1 database:** select `techcodecreations-db`
+   - **Variable name:** `DB` *(⚠️ MUST be uppercase `DB`)*
+   - **D1 database:** select **`techcodecreations-db`**
 6. Click **Save and Deploy**.
-7. Copy your Worker URL from the top of the page (e.g. `https://techcodecreations-api.<your-subdomain>.workers.dev`).
 
 ---
 
-## 🔗 Step 5: Connect in Tech Code Creations Admin Portal
+## 🔗 Step 5: Verification & Sync in Tech Code Creations Admin Portal
 
-1. Open your admin portal: [http://localhost:8080/admin.html](http://localhost:8080/admin.html)
-2. In the top header bar, click the **Cloudflare DB** button.
-3. Paste your Worker URL in the box.
-4. Click **Save & Connect**.
-5. Click **Sync Local Orders to Cloudflare**.
-6. ✅ **All your client bookings, orders, and official bills will now sync to the cloud automatically!**
+Your Worker URL is already pre-configured in your Admin Portal:
+`https://techcodecreations-api.techcodecreations.workers.dev`
+
+1. Open your admin portal: [admin.html](file:///c:/Users/Kubera/OneDrive/Desktop/TechCodeCreations/admin.html)
+2. In the top header bar, click the **Database** button (or **Cloudflare DB**).
+3. Click **🔍 Test Database Connection**:
+   - ✅ It will verify your live D1 database with a green checkmark!
+4. Click **🔄 Sync All Orders to Database**:
+   - ✅ All your client bookings, orders, and official bills are now permanently stored in Cloudflare D1!

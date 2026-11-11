@@ -71,7 +71,7 @@ const CLOUDFLARE_DEFAULT_CONFIG = {
   databaseName: "techcodecreations-db",
   serviceName: "techcodecreations-api",
   apiKey: "tcc_live_sec_8248688471_db",
-  defaultEndpoint: ""
+  defaultEndpoint: "https://techcodecreations-api.techcodecreations.workers.dev"
 };
 
 const CLOUD_DB_CONFIG = {
@@ -79,6 +79,7 @@ const CLOUD_DB_CONFIG = {
   databaseName: "techcodecreations-db",
   serviceName: "techcodecreations-api",
   apiKey: "tcc_live_sec_8248688471_db",
+  defaultEndpoint: "https://techcodecreations-api.techcodecreations.workers.dev",
   pollIntervalMs: 12000
 };
 
@@ -686,7 +687,7 @@ class TechCodeApp {
   // Connected Account: techcodecreations@gmail.com
   // ==========================================================================
   getCloudflareApiUrl() {
-    return (localStorage.getItem(STORAGE_KEYS.CF_API_URL) || "").trim();
+    return (localStorage.getItem(STORAGE_KEYS.CF_API_URL) || CLOUD_DB_CONFIG.defaultEndpoint).trim();
   }
 
   getCleanApiUrl() {
@@ -805,25 +806,53 @@ class TechCodeApp {
         statusBox.style.borderColor = "#bfdbfe";
         statusBox.style.color = "#1d4ed8";
       }
-      if (statusTitle) statusTitle.textContent = "Testing Cloudflare Worker Connection...";
+      if (statusTitle) statusTitle.textContent = "Connecting to Cloudflare Database...";
       if (statusIcon) statusIcon.textContent = "⏳";
-      if (statusMsg) statusMsg.innerHTML = `Pinging <code>${url}/api/health</code>...`;
+      if (statusMsg) statusMsg.innerHTML = `Testing connection to <code>${url}/api/health</code>...`;
 
       try {
         const endpoint = url + "/api/health";
         const res = await fetch(endpoint, { method: "GET", headers: { "Accept": "application/json" } });
+
         if (res.ok) {
-          if (statusBox) {
-            statusBox.style.background = "#ecfdf5";
-            statusBox.style.borderColor = "#a7f3d0";
-            statusBox.style.color = "#047857";
+          const info = await res.json().catch(() => ({}));
+          const isDbBound = info.databaseConnected !== false;
+
+          if (isDbBound) {
+            if (statusBox) {
+              statusBox.style.background = "#ecfdf5";
+              statusBox.style.borderColor = "#a7f3d0";
+              statusBox.style.color = "#047857";
+            }
+            if (statusTitle) statusTitle.textContent = "Cloudflare D1 Database: Connected & Live!";
+            if (statusIcon) statusIcon.textContent = "🟢";
+            if (statusMsg) statusMsg.innerHTML = `Worker is online at <code>${url}</code> and connected to D1 Database <strong>${CLOUD_DB_CONFIG.databaseName}</strong> (${CLOUD_DB_CONFIG.account}). All bills &amp; orders save directly to Cloudflare!`;
+            this.updateCloudflareStatusPill(true);
+            this.showToast("Cloudflare D1 Database connected successfully!", "success");
+            return true;
+          } else {
+            if (statusBox) {
+              statusBox.style.background = "#fffbeb";
+              statusBox.style.borderColor = "#fde68a";
+              statusBox.style.color = "#b45309";
+            }
+            if (statusTitle) statusTitle.textContent = "⚠️ Worker Online – D1 Database Binding Missing";
+            if (statusIcon) statusIcon.textContent = "⚠️";
+            if (statusMsg) statusMsg.innerHTML = `Worker is online, but D1 binding is not linked yet. In Cloudflare Worker <strong>Settings &gt; Bindings</strong>, click <strong>Add</strong> &gt; <strong>D1 Database</strong> &gt; Variable: <code>DB</code> &gt; Database: <code>techcodecreations-db</code> &gt; Save.`;
+            this.showToast("Worker is online! Please add 'DB' binding in Cloudflare Settings.", "info");
+            return false;
           }
-          if (statusTitle) statusTitle.textContent = "Cloudflare D1: Connected & Synchronized";
-          if (statusIcon) statusIcon.textContent = "🟢";
-          if (statusMsg) statusMsg.innerHTML = `Connected to Cloudflare Worker (<strong>${CLOUD_DB_CONFIG.account}</strong>) with API Key: <code>${apiKey}</code>. Edge D1 Database is live!`;
-          this.updateCloudflareStatusPill(true);
-          this.showToast("Cloudflare D1 Worker connected successfully!", "success");
-          return true;
+        } else if (res.status === 404) {
+          if (statusBox) {
+            statusBox.style.background = "#fffbeb";
+            statusBox.style.borderColor = "#fde68a";
+            statusBox.style.color = "#b45309";
+          }
+          if (statusTitle) statusTitle.textContent = "⚠️ Cloudflare Worker Needs worker.js Code";
+          if (statusIcon) statusIcon.textContent = "⚠️";
+          if (statusMsg) statusMsg.innerHTML = `Worker is deployed at <code>${url}</code>, but needs the <code>worker.js</code> API code to save bills to the database. Click <strong>"📋 Copy worker.js Code"</strong> above, paste it into Cloudflare <strong>Edit code</strong>, and click <strong>Deploy</strong>!`;
+          this.showToast("Please paste worker.js code into Cloudflare online editor and click Deploy.", "info");
+          return false;
         } else {
           throw new Error(`HTTP ${res.status}`);
         }
@@ -833,11 +862,11 @@ class TechCodeApp {
           statusBox.style.borderColor = "#fde68a";
           statusBox.style.color = "#b45309";
         }
-        if (statusTitle) statusTitle.textContent = "Worker Unreachable – Local Database Active";
-        if (statusIcon) statusIcon.textContent = "⚠️";
-        if (statusMsg) statusMsg.innerHTML = `Could not reach <code>${url}</code> (${e.message}). All client bills & orders remain 100% safely active in your local database for <strong>${CLOUD_DB_CONFIG.account}</strong>.`;
+        if (statusTitle) statusTitle.textContent = "Local Database Active (Cloudflare Pending)";
+        if (statusIcon) statusIcon.textContent = "ℹ️";
+        if (statusMsg) statusMsg.innerHTML = `Bills are actively saved in your local database for <strong>${CLOUD_DB_CONFIG.account}</strong>. To sync with Cloudflare D1, paste <code>worker.js</code> into your worker at <a href="https://dash.cloudflare.com" target="_blank" style="color:#0284c7; font-weight:700;">dash.cloudflare.com</a>.`;
         this.updateCloudflareStatusPill(true);
-        this.showToast("Worker endpoint unreachable. Local database is active.", "info");
+        this.showToast("Local database active. To connect Cloudflare D1, deploy worker.js.", "info");
         return false;
       }
     }
@@ -1012,13 +1041,21 @@ class TechCodeApp {
     const customUrl = this.getCleanApiUrl();
     if (customUrl) {
       try {
-        await fetch(`${customUrl}/api/orders`, {
+        const res = await fetch(`${customUrl}/api/orders`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(order)
         });
+        if (res.ok) {
+          this.showToast(`☁️ Bill ${order.invoiceNo || order.id} saved in Cloudflare D1 Database!`, "success");
+          return true;
+        } else if (res.status === 404) {
+          this.showToast(`Bill saved locally. To sync to Cloudflare D1, paste worker.js in dash.cloudflare.com.`, "info");
+        } else if (res.status === 500) {
+          this.showToast(`Bill saved locally. Cloudflare: Add 'DB' binding in Worker Settings > Bindings.`, "info");
+        }
       } catch (e) {
-        console.warn("Cloudflare push fallback:", e);
+        console.warn("Cloudflare push note:", e);
       }
     }
   }

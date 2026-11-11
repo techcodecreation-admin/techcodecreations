@@ -874,17 +874,33 @@ For any queries / support contact +91 8248688471.</textarea>
 
           <div>
             <label style="display:block; font-weight:700; font-size:0.86rem; color:#334155; margin-bottom:6px;">
-              Cloudflare Worker URL (Optional Edge Endpoint):
+              Cloudflare Worker URL (Connected):
             </label>
             <div style="display:flex; gap:6px;">
-              <input type="url" id="cfApiUrlInput" class="tcc-invoice-form-input" placeholder="https://techcodecreations-api.workers.dev" style="flex:1; font-family:monospace; font-size:0.88rem; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px;">
+              <input type="url" id="cfApiUrlInput" class="tcc-invoice-form-input" value="https://techcodecreations-api.techcodecreations.workers.dev" placeholder="https://techcodecreations-api.techcodecreations.workers.dev" style="flex:1; font-family:monospace; font-size:0.88rem; padding:10px 12px; border:1.5px solid #0284c7; background:#f0f9ff; border-radius:8px; font-weight:700; color:#0369a1;">
               <button type="submit" class="btn btn-primary btn-sm" style="padding:10px 14px; font-weight:800; white-space:nowrap;">
                 Save
               </button>
             </div>
-            <span style="display:block; font-size:0.75rem; color:#64748b; margin-top:4px;">
-              Enter your deployed worker URL to sync with Cloudflare D1 SQL
+            <span style="display:block; font-size:0.75rem; color:#0284c7; margin-top:4px; font-weight:600;">
+              ✓ Cloudflare D1 Endpoint: https://techcodecreations-api.techcodecreations.workers.dev
             </span>
+          </div>
+        </div>
+
+        <!-- Quick 1-Click Worker Code Copy Box -->
+        <div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:14px 18px; margin-bottom:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <strong style="color:#15803d; font-size:0.92rem; display:block;">📋 Copy worker.js for Cloudflare (1-Click):</strong>
+            <span style="font-size:0.8rem; color:#166534;">Click below to copy your complete worker API code, then paste it into Cloudflare <strong>Edit code</strong> &gt; <strong>Deploy</strong>!</span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="if(window.app){app.copyWorkerCode();}" style="background:#16a34a; border-color:#15803d; font-weight:800; padding:8px 16px;">
+              📋 Copy worker.js Code
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.copySchemaCode();}" style="font-weight:700; padding:8px 14px; border-color:#cbd5e1; background:#ffffff;">
+              📋 Copy schema.sql
+            </button>
           </div>
         </div>
 
