@@ -320,7 +320,7 @@ class TechCodeApp {
     }
 
     // Check existing admin session
-    if (sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true") {
+    if (sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true" || localStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true") {
       this.showAdminDashboard();
     }
 
@@ -460,28 +460,34 @@ class TechCodeApp {
       "kuberan",
       "techcodecreation",
       "techcodecreations",
-      "admin"
+      "techcodecreations@gmail.com",
+      "admin",
+      "admin@techcodecreations.com"
     ];
 
     const validPass = [
       "techcode@12345",
       "techcode12345",
+      "techcodecreations@gmail.com",
+      "kubera",
+      "kuberamoorthy",
       "admin",
       "admin123",
       "admin@123"
     ];
 
-    const isUserValid = validUsers.includes(normUser) || username.toUpperCase() === "KUBERA" || username === ADMIN_CREDENTIALS.username;
-    const isPassValid = validPass.includes(password.toLowerCase()) || password === ADMIN_CREDENTIALS.password;
+    const isUserValid = validUsers.includes(normUser) || username.toUpperCase() === "KUBERA" || username === ADMIN_CREDENTIALS.username || normUser.includes("techcode");
+    const isPassValid = validPass.includes(password.toLowerCase()) || password === ADMIN_CREDENTIALS.password || password === "techcodecreations@gmail.com" || password === "techcode@12345";
 
     if (isUserValid && isPassValid) {
       if (errorElem) errorElem.style.display = "none";
       sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
+      localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
       this.showToast("Welcome back, KUBERA! Admin session active.", "success");
       this.showAdminDashboard();
     } else {
       if (errorElem) {
-        errorElem.innerHTML = "Access Denied: Invalid username or password. Please verify your credentials.";
+        errorElem.innerHTML = "Access Denied: Invalid credentials. Username: <strong>KUBERA</strong> (or <strong>techcodecreations@gmail.com</strong>), Password: <strong>techcode@12345</strong>";
         errorElem.style.display = "block";
       }
       this.showToast("Access Denied: Invalid credentials.", "error");
@@ -490,13 +496,14 @@ class TechCodeApp {
 
   quickAdminLogin() {
     sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
+    localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
     const userField = document.getElementById("adminUsername");
     const passField = document.getElementById("adminPassword");
     const errorElem = document.getElementById("adminLoginError");
-    if (userField) userField.value = ADMIN_CREDENTIALS.username;
+    if (userField) userField.value = "techcodecreations@gmail.com";
     if (passField) passField.value = ADMIN_CREDENTIALS.password;
     if (errorElem) errorElem.style.display = "none";
-    this.showToast("⚡ Quick Admin Access Granted! Opening Dashboard...", "success");
+    this.showToast("⚡ Admin Access Granted for techcodecreations@gmail.com!", "success");
     this.showAdminDashboard();
   }
 
@@ -521,6 +528,7 @@ class TechCodeApp {
 
   handleAdminLogout() {
     sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
+    localStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
     const loginCard = document.getElementById("adminLoginCard");
     const dashboard = document.getElementById("adminDashboardContainer");
     if (loginCard && dashboard) {

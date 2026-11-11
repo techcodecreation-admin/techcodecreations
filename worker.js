@@ -213,6 +213,11 @@ export default {
                   <strong>Total Orders in Cloud:</strong> <span style="color:#38bdf8; font-weight:700;">${ordersCount}</span><br>
                   <strong>Environment Keys:</strong> <code>${Object.keys(env || {}).join(", ") || "None"}</code>
                 </div>
+                <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+                  <a href="http://localhost:8080/admin.html" style="background:#0284c7; color:#fff; text-decoration:none; padding:11px 18px; border-radius:8px; font-weight:700; font-size:0.9rem; display:inline-block;">
+                    🖥️ Open Admin Portal (admin.html)
+                  </a>
+                </div>
               </div>
             </body>
             </html>
