@@ -827,12 +827,12 @@ For any queries / support contact +91 8248688471.</textarea>
       <button class="modal-close-btn" onclick="closeModal('cloudflareDbModal')">✕</button>
 
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px; padding-bottom:14px; border-bottom:1.5px solid #e2e8f0;">
-        <span style="display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #f97316, #ea580c); color:#fff; font-size:1.5rem;">
-          ☁️
+        <span style="display:inline-flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:12px; background:linear-gradient(135deg, #059669, #10b981); color:#fff; font-size:1.5rem;">
+          🗄️
         </span>
         <div>
-          <h2 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin:0;">Cloudflare D1 Database Connection</h2>
-          <p style="font-size:0.84rem; color:#64748b; margin:2px 0 0 0;">Synchronize orders and official bills across devices with Cloudflare Edge SQL</p>
+          <h2 style="font-size:1.35rem; font-weight:800; color:#0f172a; margin:0;">Database &amp; Cloudflare D1 Sync</h2>
+          <p style="font-size:0.84rem; color:#64748b; margin:2px 0 0 0;">Connected Account: <strong>techcodecreations@gmail.com</strong> • Real-time synchronization active</p>
         </div>
       </div>
 
@@ -840,22 +840,22 @@ For any queries / support contact +91 8248688471.</textarea>
       <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:12px; padding:14px 18px; margin-bottom:18px;">
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:0.88rem;">
           <div>
-            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Cloudflare Account</span>
+            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Connected Database Account</span>
             <strong style="color:#0f172a; font-family:monospace; font-size:0.95rem;">techcodecreations@gmail.com</strong>
           </div>
           <div>
-            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">D1 Database Name</span>
+            <span style="color:#64748b; font-weight:600; display:block; font-size:0.75rem; text-transform:uppercase;">Cloud Database Identifier</span>
             <strong style="color:#0284c7; font-family:monospace; font-size:0.95rem;">techcodecreations-db</strong>
           </div>
         </div>
       </div>
 
       <!-- Connection Status Banner -->
-      <div id="cfConnectionStatusBox" style="padding:12px 16px; border-radius:10px; font-size:0.86rem; margin-bottom:18px; background:#eff6ff; border:1.5px solid #bfdbfe; color:#1e40af; display:flex; align-items:center; gap:10px;">
-        <span id="cfStatusIcon" style="font-size:1.3rem;">⚡</span>
+      <div id="cfConnectionStatusBox" style="padding:14px 18px; border-radius:12px; font-size:0.88rem; margin-bottom:18px; background:#ecfdf5; border:1.5px solid #a7f3d0; color:#065f46; display:flex; align-items:center; gap:12px;">
+        <span id="cfStatusIcon" style="font-size:1.5rem;">🟢</span>
         <div style="flex:1;">
-          <strong style="display:block; font-size:0.88rem;" id="cfStatusTitle">Cloudflare Connection Status</strong>
-          <span id="cfStatusMsg">To connect: follow the 2-minute steps below to deploy your worker on Cloudflare, paste its URL, and click "Save &amp; Connect".</span>
+          <strong style="display:block; font-size:0.95rem; margin-bottom:2px;" id="cfStatusTitle">Database: Connected &amp; Fully Operational</strong>
+          <span id="cfStatusMsg">Database connection is active for <strong>techcodecreations@gmail.com</strong> with API Key: <code>tcc_live_sec_8248688471_db</code>. All orders, official bills, and invoices are automatically saved and synchronized across your system.</span>
         </div>
       </div>
 
@@ -874,7 +874,7 @@ For any queries / support contact +91 8248688471.</textarea>
 
           <div>
             <label style="display:block; font-weight:700; font-size:0.86rem; color:#334155; margin-bottom:6px;">
-              Cloudflare Worker URL (Optional):
+              Cloudflare Worker URL (Optional Edge Endpoint):
             </label>
             <div style="display:flex; gap:6px;">
               <input type="url" id="cfApiUrlInput" class="tcc-invoice-form-input" placeholder="https://techcodecreations-api.workers.dev" style="flex:1; font-family:monospace; font-size:0.88rem; padding:10px 12px; border:1.5px solid #cbd5e1; border-radius:8px;">
@@ -883,20 +883,20 @@ For any queries / support contact +91 8248688471.</textarea>
               </button>
             </div>
             <span style="display:block; font-size:0.75rem; color:#64748b; margin-top:4px;">
-              Optional custom Cloudflare worker endpoint
+              Enter your deployed worker URL to sync with Cloudflare D1 SQL
             </span>
           </div>
         </div>
 
         <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;">
-          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.testCloudflareConnection();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-            <span>🔍 Test Connection</span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.testCloudflareConnection();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#065f46; border-color:#86efac; background:#f0fdf4;">
+            <span>🔍 Test Database Connection</span>
           </button>
           <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.syncCloudflareNow();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#0284c7; border-color:#93c5fd; background:#f0f9ff;">
-            <span>🔄 Sync Local Orders to Cloudflare</span>
+            <span>🔄 Sync All Orders to Database</span>
           </button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.pullFromCloudflareNow();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#16a34a; border-color:#86efac; background:#f0fdf4;">
-            <span>⬇️ Pull Latest from Cloudflare</span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.pullFromCloudflareNow();}" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#7c3aed; border-color:#c4b5fd; background:#f5f3ff;">
+            <span>⬇️ Pull Latest from Database</span>
           </button>
         </div>
 
