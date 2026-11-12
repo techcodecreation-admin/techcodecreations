@@ -414,12 +414,28 @@ export default {
       // DELETE /api/orders/:id or /orders/:id - Delete order
       if ((path.startsWith("/api/orders/") || path.startsWith("/orders/")) && request.method === "DELETE") {
         const id = decodeURIComponent(path.replace(/^\/(api\/)?orders\//, ""));
-        if (db) {
-          await ensureD1Tables(db);
-          await db.prepare("DELETE FROM orders WHERE id = ?").bind(id).run();
+        if (!db) {
+          return jsonResponse({
+            success: false,
+            error: "Cloudflare D1 is not bound to this Worker. Configure the D1 binding before deleting orders."
+          }, 503);
         }
+
+        const tablesReady = await ensureD1Tables(db);
+        if (!tablesReady) {
+          return jsonResponse({
+            success: false,
+            error: "Cloudflare D1 is unavailable. Check the Worker logs and database binding."
+          }, 500);
+        }
+
+        await db.prepare("DELETE FROM orders WHERE id = ?").bind(id).run();
         memoryOrders.delete(id);
-        return jsonResponse({ success: true, message: `Order ${id} deleted` });
+        return jsonResponse({
+          success: true,
+          message: `Order ${id} deleted`,
+          storage: "Cloudflare D1 SQL"
+        });
       }
 
       // 3. Bill Number Sequence Endpoints

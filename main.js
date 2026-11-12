@@ -1584,25 +1584,26 @@ class TechCodeApp {
   }
 
   async pushDeleteToCloudflare(orderId) {
-    if (!orderId) return;
-
-    try {
-      if (this._syncChannel) {
-        this._syncChannel.postMessage({
-          type: "SYNC_ORDERS",
-          orders: this.orders
-        });
-      }
-    } catch (e) {}
-
+    if (!orderId) throw new Error("Missing order ID.");
     const customUrl = this.getCleanApiUrl();
-    if (customUrl) {
-      try {
-        await fetch(`${customUrl}/api/orders/${encodeURIComponent(orderId)}`, {
-          method: "DELETE"
-        });
-      } catch (e) {}
+    if (!customUrl) throw new Error("Cloudflare Worker URL is not configured.");
+
+    const response = await fetch(`${customUrl}/api/orders/${encodeURIComponent(orderId)}`, {
+      method: "DELETE",
+      headers: { "Accept": "application/json" }
+    });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result || result.success !== true || result.storage !== "Cloudflare D1 SQL") {
+      throw new Error(result && (result.error || result.message) || "Cloudflare did not confirm deletion from D1. Update the Worker and verify its D1 binding.");
     }
+
+    if (this._syncChannel) {
+      this._syncChannel.postMessage({
+        type: "SYNC_ORDERS",
+        orders: this.orders.filter(order => order.id !== orderId)
+      });
+    }
+    return true;
   }
 
   async pushStatusToCloudflare(orderId, newStatus) {
@@ -2649,12 +2650,17 @@ class TechCodeApp {
     }).join("");
   }
 
-  deleteOrder(orderId) {
-    if (confirm(`Are you sure you want to delete order ${orderId}?`)) {
-      this.orders = this.orders.filter(o => o.id !== orderId);
+  async deleteOrder(orderId) {
+    if (!confirm(`Are you sure you want to delete order ${orderId}?`)) return;
+
+    try {
+      await this.pushDeleteToCloudflare(orderId);
+      this.orders = this.orders.filter(order => order.id !== orderId);
       this.saveOrders();
-      this.pushDeleteToCloudflare(orderId);
-      this.showToast(`Order ${orderId} deleted.`, "info");
+      this.showToast(`Order ${orderId} deleted from Cloudflare D1.`, "success");
+    } catch (error) {
+      console.error("Cloudflare order deletion failed:", error);
+      this.showToast(`Could not delete order ${orderId} from Cloudflare D1. ${error.message}`, "error");
     }
   }
 
