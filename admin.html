@@ -1096,20 +1096,27 @@ For any queries / support contact +91 8248688471.</textarea>
             e.preventDefault();
             const key = passInput ? passInput.value.trim() : '';
             if (!key) return;
-            const validHashes = window.ADMIN_SECURITY_HASHES || [
-              "d6c14cd3ab79bfeadbd056fc896f74b7feb05622495b8a55e1f671115e096e13",
-              "6425b4cb43f36518203425a54a2b4c67214bdd811df3de50bf9dbbefc1fc7912",
-              "1177c7d2ee3867857fd16b45d8077f7280ef2713d2140c349476ca6826ce6dc5",
-              "1e7fb994db29ca8f7c9116d01bf7becfb745d32f8b3e8b04181b92fcd48793ce",
-              "732e129fd3d30fa12743a7f5c293448715d53123a8ff213c1c2000283925fc86",
-              "c981bbdffa216158f0a6eaa0643296b90c737ba59a7bc85d435687496e1727c2"
-            ];
-            let keyHash = '';
-            if (typeof window.computeSha256 === 'function') {
-              keyHash = await window.computeSha256(key);
+            let authenticated = false;
+            if (typeof window.verifyAdminSecurityPasskey === 'function') {
+              authenticated = await window.verifyAdminSecurityPasskey(key);
+            } else {
+              const validHashes = window.ADMIN_SECURITY_HASHES || [
+                "d6c14cd3ab79bfeadbd056fc896f74b7feb05622495b8a55e1f671115e096e13",
+                "6425b4cb43f36518203425a54a2b4c67214bdd811df3de50bf9dbbefc1fc7912",
+                "1177c7d2ee3867857fd16b45d8077f7280ef2713d2140c349476ca6826ce6dc5",
+                "1e7fb994db29ca8f7c9116d01bf7becfb745d32f8b3e8b04181b92fcd48793ce",
+                "732e129fd3d30fa12743a7f5c293448715d53123a8ff213c1c2000283925fc86",
+                "c981bbdffa216158f0a6eaa0643296b90c737ba59a7bc85d435687496e1727c2"
+              ];
+              let keyHash = '';
+              if (typeof window.computeSha256 === 'function') {
+                keyHash = await window.computeSha256(key);
+              }
+              authenticated = validHashes.includes(keyHash);
             }
-            if (validHashes.includes(keyHash)) {
-              sessionStorage.setItem('techcode_admin_session', 'true');
+            if (authenticated) {
+              const secToken = typeof generateSecureSessionToken === 'function' ? generateSecureSessionToken() : 'true';
+              sessionStorage.setItem('techcode_admin_session', secToken);
               if (passInput) passInput.value = '';
               if (card) card.style.display = 'none';
               if (dash) dash.style.display = 'block';
