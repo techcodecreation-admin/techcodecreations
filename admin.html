@@ -1058,7 +1058,8 @@ For any queries / support contact +91 8248688471.</textarea>
 
     // Failsafe direct handlers: Secure Session Authentication and Modular Menu Navigation
     document.addEventListener('DOMContentLoaded', () => {
-      const isAuth = sessionStorage.getItem('techcode_admin_session') === 'true';
+      const sessionToken = sessionStorage.getItem('techcode_admin_session');
+      const isAuth = Boolean(sessionToken && (sessionToken === 'true' || sessionToken.startsWith('tcc_sec_')));
       const card = document.getElementById('adminLoginCard');
       const dash = document.getElementById('adminDashboardContainer');
       
