@@ -100,16 +100,6 @@ class TechCodeApp {
       if (stored) {
         let parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          // Automatic cleanup of old mock/sample bills
-          const cleanedKey = localStorage.getItem("techcode_old_bills_reset_v2");
-          const hasOldSampleBills = parsed.some(o => o.id === "TCC-2026-001" || o.id === "TCC-2026-002" || o.invoiceNo === "TCC/2026/001");
-          if (!cleanedKey || hasOldSampleBills) {
-            parsed = parsed.filter(o => !o.invoiceNo && !o.isManualBill && !String(o.id || "").startsWith("TCC-2026-00"));
-            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(parsed));
-            localStorage.setItem("techcode_old_bills_reset_v2", "true");
-            localStorage.removeItem("techcode_last_bill_seq");
-            localStorage.setItem("techcode_bill_seq_override", "1");
-          }
           return parsed;
         }
       }
@@ -121,6 +111,10 @@ class TechCodeApp {
       localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(defaults));
     } catch (e) {}
     return defaults;
+  }
+
+  getDefaultOrders() {
+    return [];
   }
 
   saveOrders() {
@@ -765,6 +759,11 @@ class TechCodeApp {
     if (fNotes) {
       fNotes.value = `Converted from Website Booking #${order.id}. ${order.details || ''}`;
     }
+
+    try {
+      this.syncManualDescriptions();
+      this.updateManualBillLivePreview();
+    } catch (e) {}
 
     this.showToast(`Pre-filled bill form with booking details for ${order.clientName}!`, "success");
   }
@@ -3001,10 +3000,11 @@ class TechCodeApp {
     const newOrder = {
       id: orderId,
       invoiceNo: invoiceNo,
+      isManualBill: true,
       date: dateFormatted,
       clientName: clientName,
       phone: phone,
-      email: `${clientName.toLowerCase().replace(/[^a-z0-9]/g, "")}@gmail.com`,
+      email: form.manualEmail && form.manualEmail.value.trim() ? form.manualEmail.value.trim() : `${clientName.toLowerCase().replace(/[^a-z0-9]/g, "")}@gmail.com`,
       address: address,
       businessName: clientName,
       websiteType: websiteType,
@@ -3043,6 +3043,10 @@ class TechCodeApp {
     this.recordBillSequence(invoiceNo);
     this.saveOrders();
     this.pushOrderToCloudflare(newOrder);
+
+    // Switch to Created Bills tab and update all views immediately
+    this.switchDashboardTab('bills');
+    this.renderAdminOrders();
 
     // Reset and clear manual bill form completely for the next bill
     this.clearManualBillForm(true);
@@ -3316,6 +3320,11 @@ class TechCodeApp {
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) modal.classList.remove("active");
+  if ((modalId === "billModal" || modalId === "manualOrderModal") && window.app) {
+    try {
+      window.app.renderAdminOrders();
+    } catch (e) {}
+  }
 }
 
 function openModal(modalId) {
