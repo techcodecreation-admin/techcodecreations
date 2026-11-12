@@ -92,41 +92,7 @@ class TechCodeApp {
     this.initCloudflareSync();
   }
 
-  getDefaultOrders() {
-    return [
-      // Sample Live Website Bookings
-      {
-        id: "TCC-2026-8421",
-        date: "2026-11-12 14:30",
-        clientName: "Ramesh Kumar",
-        businessName: "RK Modern Silks",
-        phone: "9842109876",
-        email: "ramesh.silks@gmail.com",
-        websiteType: "E-Commerce Web Application",
-        timeline: "10-15 Days",
-        features: ["Product Catalog", "UPI Checkout", "Admin Dashboard"],
-        details: "Need a modern saree and silk store with mobile payment gateway.",
-        status: "Pending",
-        notes: "Submitted through booking form.",
-        isWebsiteBooking: true
-      },
-      {
-        id: "TCC-2026-5192",
-        date: "2026-11-11 11:15",
-        clientName: "Dr. Priya Sundaram",
-        businessName: "Sundaram Dental Clinic",
-        phone: "9789012345",
-        email: "priya.dental@gmail.com",
-        websiteType: "Doctor Portfolio & Appointment Booking",
-        timeline: "7 Days",
-        features: ["Appointment Booking", "Google Reviews", "WhatsApp Chat"],
-        details: "Patient appointment schedule and clinic treatment portfolio.",
-        status: "In Progress",
-        notes: "Submitted through booking form.",
-        isWebsiteBooking: true
-      }
-    ];
-  }
+ 
 
   loadOrders() {
     try {
