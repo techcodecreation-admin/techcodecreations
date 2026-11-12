@@ -1587,7 +1587,44 @@ class TechCodeApp {
     }
 
     container.innerHTML = `
-      <div class="tcc-invoice-container" id="printableBillArea">
+      <!-- Single-Page A4 Status & Quick Action Banner -->
+      <div class="no-print" style="max-width:820px; margin:0 auto 16px; background:#f0f9ff; border:1.5px solid #bae6fd; border-radius:12px; padding:12px 18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:0 4px 12px rgba(2, 132, 199, 0.08);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.4rem;">📸</span>
+          <div>
+            <div style="font-size:0.92rem; color:#0369a1; font-weight:800;">
+              High-Quality Single-Page A4 Bill Generated
+            </div>
+            <div style="font-size:0.78rem; color:#64748b; font-weight:600; margin-top:2px;">
+              Ready to save as high-resolution PNG image or print directly on a single A4 sheet without multi-page split.
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="app.downloadBillImage()" style="font-weight:800; padding:8px 16px; font-size:0.82rem; display:inline-flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Save Image (PNG)</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="app.printBillA4()" style="font-weight:800; padding:8px 16px; font-size:0.82rem; background:#ffffff; color:#0f172a; border-color:#94a3b8; display:inline-flex; align-items:center; gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            <span>Print Single A4</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- High-Quality Image Display Section (Default view for saving and viewing as crisp single-page image) -->
+      <div id="billImageSection" style="display:block; text-align:center;">
+        <div style="position:relative; display:inline-block; max-width:820px; width:100%;">
+          <div id="billImageLoadingSpinner" class="no-print" style="padding:48px 20px; text-align:center; color:#0284c7; font-weight:700; background:#ffffff; border-radius:12px; border:1.5px dashed #7dd3fc; margin-bottom:16px;">
+            <span class="pulse-live-dot" style="display:inline-block; margin-right:8px;"></span> Rendering crystal-clear single-page A4 bill image...
+          </div>
+          <img id="billRenderedImage" alt="Tech Code Creations Official Invoice" style="display:none; width:100%; max-width:820px; border-radius:10px; box-shadow:0 15px 45px rgba(2, 132, 199, 0.16); border:1.5px solid #bae6fd; background:#ffffff; margin:0 auto; box-sizing:border-box;" />
+        </div>
+      </div>
+
+      <!-- Live Printable Sheet Section (Preserved for pixel-perfect printing and capture) -->
+      <div id="billSheetSection" style="display:none;">
+        <div class="tcc-invoice-container" id="printableBillArea">
         <!-- Top-Right Geometric Polygonal Accent -->
         <div class="tcc-corner-decor tcc-corner-top-right">
           <svg viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1899,27 +1936,28 @@ class TechCodeApp {
           </div>
         </div>
       </div>
+      </div><!-- /#billSheetSection -->
 
       <!-- Action buttons at bottom of bill for quick access -->
-      <div class="no-print" style="display:flex; justify-content:center; gap:14px; margin-top:24px; padding-bottom:12px; flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="window.print()">
+      <div class="no-print" style="display:flex; justify-content:center; gap:12px; margin-top:24px; padding-bottom:14px; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="app.downloadBillImage()" style="font-weight:800; padding:10px 20px; display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg, #0284c7, #2563eb); border:none; box-shadow:0 4px 14px rgba(2, 132, 199, 0.35);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span>Save Bill Image (PNG)</span>
+        </button>
+        <button class="btn btn-secondary" onclick="app.printBillA4()" style="font-weight:800; padding:10px 20px; display:inline-flex; align-items:center; gap:8px; background:#fff; color:#0f172a; border-color:#94a3b8;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          <span>Print / Save as PDF</span>
+          <span>Print Single A4 Sheet</span>
         </button>
-        <button class="btn btn-secondary" onclick="app.toggleBillSheetPreview()">
+        <button class="btn btn-secondary" onclick="app.toggleBillViewMode()" style="font-weight:700; padding:10px 18px; display:inline-flex; align-items:center; gap:6px; background:#fff;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-          <span>Toggle Sheet Preview</span>
+          <span>Toggle Image / Document</span>
         </button>
-        <button class="btn btn-secondary" onclick="app.toggleBillFullscreen()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-          <span>Fullscreen</span>
-        </button>
-        <a href="https://wa.me/91${phone.replace(/\D/g,'')}?text=${encodeURIComponent(`Hello ${clientName}! Here is your official invoice (${invNum}) from Tech Code Creations. Total: ₹${netAmount}. Thank you!`)}" target="_blank" class="btn btn-secondary" style="color:#16a34a; border-color:#86efac; gap:8px;">
+        <a href="https://wa.me/91${phone.replace(/\D/g,'')}?text=${encodeURIComponent(`Hello ${clientName}! Here is your official invoice (${invNum}) from Tech Code Creations. Total: ₹${netAmount}. Thank you!`)}" target="_blank" class="btn btn-secondary" style="color:#16a34a; border-color:#86efac; background:#f0fdf4; gap:8px; font-weight:700; padding:10px 18px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           <span>Share Bill on WhatsApp</span>
         </a>
-        <button class="btn btn-secondary" onclick="closeModal('billModal')">
-          Close
+        <button class="btn btn-secondary" onclick="closeModal('billModal')" style="font-weight:700; padding:10px 18px;">
+          ✕ Close
         </button>
       </div>
     `;
@@ -1930,6 +1968,181 @@ class TechCodeApp {
     if (modalContent) {
       modalContent.classList.remove("bill-modal-windowed");
       modalContent.classList.add("bill-modal-fullscreen-content");
+    }
+
+    // Trigger high-resolution single-page A4 image generation
+    setTimeout(() => {
+      this.renderBillImage(order);
+    }, 150);
+  }
+
+  async renderBillImage(order) {
+    const element = document.getElementById("printableBillArea");
+    if (!element) return;
+
+    const imgElem = document.getElementById("billRenderedImage");
+    const spinner = document.getElementById("billImageLoadingSpinner");
+    const sheetSec = document.getElementById("billSheetSection");
+    const imgSec = document.getElementById("billImageSection");
+
+    // Temporarily make sheet visible for DOM capture
+    const prevDisplay = sheetSec ? sheetSec.style.display : "";
+    if (sheetSec) {
+      sheetSec.style.display = "block";
+      sheetSec.style.position = "relative";
+    }
+
+    let dataUrl = null;
+
+    if (typeof window.html2canvas === "function") {
+      try {
+        const canvas = await window.html2canvas(element, {
+          scale: 2.2, // Ultra-crisp 300 DPI high-definition scale
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false
+        });
+        dataUrl = canvas.toDataURL("image/png");
+      } catch (err) {
+        console.warn("html2canvas capture error:", err);
+      }
+    }
+
+    if (dataUrl) {
+      this._currentBillImageDataUrl = dataUrl;
+      this._currentBillOrder = order;
+      if (spinner) spinner.style.display = "none";
+      if (imgElem) {
+        imgElem.src = dataUrl;
+        imgElem.style.display = "block";
+      }
+      // Image view is the default clean view
+      if (sheetSec) sheetSec.style.display = "none";
+      if (imgSec) imgSec.style.display = "block";
+    } else {
+      // Fallback: If canvas capture is still pending or blocked, show the live sheet
+      if (spinner) spinner.style.display = "none";
+      if (sheetSec) sheetSec.style.display = "block";
+      if (imgSec) imgSec.style.display = "none";
+    }
+  }
+
+  downloadBillImage() {
+    const order = this._currentBillOrder;
+    const invNum = order ? String(order.invoiceNo || order.id || "001").replace(new RegExp("[/\\\\?%*:|\"<>]", "g"), "_") : "Bill";
+    const filename = `TechCodeCreations_Invoice_${invNum}.png`;
+
+    if (this._currentBillImageDataUrl) {
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = this._currentBillImageDataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      this.showToast(`📸 Saved ${filename} as High-Quality Image!`, "success");
+      return;
+    }
+
+    // If image hasn't rendered yet, trigger capture and download
+    const element = document.getElementById("printableBillArea");
+    if (element && typeof window.html2canvas === "function") {
+      this.showToast("Generating high-resolution bill image...", "info");
+      window.html2canvas(element, { scale: 2.2, useCORS: true, backgroundColor: "#ffffff" }).then(canvas => {
+        const url = canvas.toDataURL("image/png");
+        this._currentBillImageDataUrl = url;
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        this.showToast(`📸 Saved ${filename} successfully!`, "success");
+      }).catch(() => {
+        window.print();
+      });
+    } else {
+      window.print();
+    }
+  }
+
+  printBillA4() {
+    if (this._currentBillImageDataUrl) {
+      // Print dedicated single-sheet A4 iframe using the exact image
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.right = "0";
+      iframe.style.bottom = "0";
+      iframe.style.width = "0";
+      iframe.style.height = "0";
+      iframe.style.border = "0";
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Invoice - Tech Code Creations</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 0 !important;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 210mm !important;
+              height: 297mm !important;
+              max-height: 297mm !important;
+              overflow: hidden !important;
+              background: #ffffff !important;
+              display: flex !important;
+              justify-content: center !important;
+              align-items: center !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            img {
+              width: 210mm !important;
+              height: 297mm !important;
+              max-height: 297mm !important;
+              object-fit: contain !important;
+              display: block !important;
+              page-break-inside: avoid !important;
+              page-break-after: avoid !important;
+              break-inside: avoid !important;
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${this._currentBillImageDataUrl}" onload="setTimeout(() => { window.print(); setTimeout(() => { window.frameElement.remove(); }, 1500); }, 300);" />
+        </body>
+        </html>
+      `);
+      doc.close();
+      return;
+    }
+
+    // Direct fallback
+    window.print();
+  }
+
+  toggleBillViewMode() {
+    const imgSec = document.getElementById("billImageSection");
+    const sheetSec = document.getElementById("billSheetSection");
+    const txt = document.getElementById("txtToggleBillView");
+    if (!imgSec || !sheetSec) return;
+
+    if (imgSec.style.display === "none") {
+      imgSec.style.display = "block";
+      sheetSec.style.display = "none";
+      if (txt) txt.textContent = "📄 Live Document";
+    } else {
+      imgSec.style.display = "none";
+      sheetSec.style.display = "block";
+      if (txt) txt.textContent = "🖼️ High-Res Image";
     }
   }
 
@@ -3167,6 +3380,9 @@ window.openManualBillModal = () => window.app && window.app.openManualBillModal(
 window.exportOrdersCSV = () => window.app && window.app.exportOrdersCSV();
 window.syncAllOrdersToCloudflare = (notify) => window.app && window.app.syncAllOrdersToCloudflare(notify);
 window.clearAllBills = (confirmUser = true) => window.app && window.app.clearAllBills(confirmUser);
+window.downloadBillImage = () => window.app && window.app.downloadBillImage();
+window.printBillA4 = () => window.app && window.app.printBillA4();
+window.toggleBillViewMode = () => window.app && window.app.toggleBillViewMode();
 
 let app;
 document.addEventListener("DOMContentLoaded", () => {
