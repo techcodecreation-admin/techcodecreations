@@ -29,12 +29,6 @@
     }
   </style>
 </head>
-<script>
-  try {
-    sessionStorage.setItem('techcode_admin_session', 'true');
-    localStorage.setItem('techcode_admin_session', 'true');
-  } catch(e) {}
-</script>
 <body>
 
   <div class="bg-mesh-grid"></div>
@@ -68,8 +62,8 @@
     <!-- Main Content Area -->
     <main class="admin-container-inner">
       <div class="container">
-        <!-- Executive Admin Login Card (New Security Design) -->
-        <div class="admin-login-card" id="adminLoginCard" style="display:none;">
+        <!-- Executive Admin Login Card (Clean, Secure Master Key Authentication) -->
+        <div class="admin-login-card" id="adminLoginCard">
           <div class="admin-lock-badge">
             <span class="pulse-dot"></span>
             <span>RESTRICTED ACCESS • ADMIN ONLY</span>
@@ -82,241 +76,267 @@
             </svg>
           </div>
 
-          <h2 class="admin-login-title">Admin Portal Login</h2>
-          <p class="admin-login-subtitle">Enter your administrative credentials to manage orders, bills, and client records.</p>
+          <h2 class="admin-login-title">Admin Security Access</h2>
+          <p class="admin-login-subtitle">Enter your authorized master administrative security key to unlock the control center.</p>
 
           <form id="adminLoginForm">
-            <div class="admin-input-wrap">
-              <label class="form-label" for="adminUsername">
-                <span>Username / Email</span>
-              </label>
-              <input type="text" id="adminUsername" class="form-control" placeholder="KUBERA or techcodecreations@gmail.com" required autocomplete="username">
-            </div>
-
             <div class="admin-input-wrap" style="position:relative;">
-              <label class="form-label" for="adminPassword">
-                <span>Password</span>
+              <label class="form-label" for="adminSecurityPasskey">
+                <span>Master Admin Security Key</span>
               </label>
-              <input type="password" id="adminPassword" class="form-control" placeholder="Enter password (e.g. techcode@12345)" required autocomplete="current-password" style="padding-right:44px;">
-              <button type="button" id="togglePassBtn" style="position:absolute; right:12px; top:36px; background:none; border:none; color:#64748b; cursor:pointer; padding:6px;" title="Show / Hide Password">
+              <input type="password" id="adminSecurityPasskey" class="form-control" placeholder="Enter secure admin key..." required autocomplete="current-password" autofocus style="padding-right:44px; font-size:1.02rem; letter-spacing:0.06em;">
+              <button type="button" id="togglePassBtn" style="position:absolute; right:12px; top:36px; background:none; border:none; color:#64748b; cursor:pointer; padding:6px;" title="Show / Hide Passkey">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </button>
             </div>
 
-            <div style="margin-bottom:14px; padding:10px 14px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; font-size:0.8rem; color:#475569; text-align:left; line-height:1.5;">
-              <strong style="color:#0f172a;">Admin Access:</strong> User: <code style="color:#0284c7; font-weight:700;">KUBERA</code> or <code style="color:#0284c7; font-weight:700;">techcodecreations@gmail.com</code> | Pass: <code style="color:#0284c7; font-weight:700;">techcode@12345</code>
-            </div>
-
-            <div id="adminLoginError" style="display:none; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:10px 14px; border-radius:10px; font-size:0.86rem; margin-bottom:16px; font-weight:700; text-align:left;"></div>
+            <div id="adminLoginError" style="display:none; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:11px 14px; border-radius:10px; font-size:0.86rem; margin-bottom:16px; font-weight:700; text-align:left;"></div>
 
             <button type="submit" class="admin-signin-btn" id="btnAdminSignIn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-              <span>Sign In to Portal</span>
-            </button>
-
-            <!-- 1-Click Quick Access Button -->
-            <button type="button" id="quickLoginBtn" onclick="if(window.app){app.quickAdminLogin();}else{sessionStorage.setItem('techcode_admin_session','true');localStorage.setItem('techcode_admin_session','true');document.getElementById('adminLoginCard').style.display='none';document.getElementById('adminDashboardContainer').style.display='block';}" style="width:100%; margin-top:12px; font-weight:800; background:#f0fdf4; border:1.5px solid #86efac; color:#15803d; padding:12px 16px; border-radius:12px; cursor:pointer; font-size:0.92rem; display:flex; align-items:center; justify-content:center; gap:8px;">
-              <span>⚡ 1-Click Quick Sign In (techcodecreations@gmail.com)</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <span>Unlock Admin Dashboard</span>
             </button>
           </form>
 
           <div class="admin-security-note">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-            <span>256-Bit Encrypted Session • Authorized Access Only</span>
+            <span>Protected by Session Authentication • Unauthorized Access Prohibited</span>
           </div>
         </div>
 
-        <!-- Dashboard View (Shown once logged in) -->
-        <div class="admin-dashboard-container" id="adminDashboardContainer" style="display:block;">
-          <!-- Header Bar -->
-          <div class="admin-dashboard-header">
+        <!-- Dashboard View (Shown once authenticated) -->
+        <div class="admin-dashboard-container" id="adminDashboardContainer" style="display:none;">
+          <!-- Header Bar with Live Indicator, Admin Badge & Three-Dot Menu (⋮) -->
+          <div class="admin-dashboard-header" style="margin-bottom:22px; padding-bottom:16px;">
             <div>
               <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 11px; background:#ecfdf5; border:1px solid #a7f3d0; color:#059669; border-radius:20px; font-size:0.75rem; font-weight:800;">
+                  <span class="pulse-live-dot"></span> LIVE ADMIN SYSTEM
+                </span>
                 <div class="admin-user-pill">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                  <span>Active Administrator: <strong>KUBERA</strong></span>
-                </div>
-                <div class="admin-user-pill" id="cfDbStatusPill" onclick="if(window.app){app.openCloudflareModal();}" style="cursor:pointer; background:#ecfdf5; border-color:#a7f3d0; color:#059669; display:inline-flex; align-items:center; gap:6px;" title="Connected Database (techcodecreations@gmail.com) - Click to manage">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-                  <span id="cfDbStatusText">Cloudflare DB: <strong style="color:#047857;">Connected (techcodecreations@gmail.com)</strong></span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                  <span>Admin: <strong>KUBERA</strong></span>
                 </div>
               </div>
-              <h1 style="font-size:2rem; margin-top:8px; color:#0f172a;">Client Orders & Bill Generator</h1>
-            </div>
-            <div class="admin-actions-bar">
-              <button class="btn btn-primary" onclick="if(window.app){app.openManualBillModal();}else{openModal('manualOrderModal');}" id="btnAddManualOrder">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-                <span>+ Create Official Bill</span>
-                <span id="nextBillNoHeaderBadge" style="font-size:0.72rem; background:rgba(255,255,255,0.22); padding:2px 7px; border-radius:6px; margin-left:4px; font-family:monospace; font-weight:700;">TCC/2026/001</span>
-              </button>
-
-              <button class="btn btn-secondary" id="btnResetBillSeqHeader" onclick="if(window.app){app.resetBillSequence(true);}" title="Reset bill number sequence (e.g. back to 001)" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                <span>Reset Bill No</span>
-              </button>
-
-              <button class="btn btn-secondary" onclick="if(window.app){app.openCloudflareModal();}" title="Cloudflare D1 Database Settings" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; color:#0369a1; border-color:#93c5fd; background:#f0f9ff;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
-                <span>Cloudflare DB</span>
-              </button>
-
-              <button class="btn btn-secondary" id="exportCsvBtn" title="Export as CSV spreadsheet">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Export CSV</span>
-              </button>
-              <button class="btn btn-secondary" id="adminLogoutBtn" style="color:#ef4444;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                <span>Logout</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Key Metrics Grid -->
-          <div class="admin-metrics-grid" style="margin-bottom:18px;">
-            <div class="metric-card">
-              <div class="metric-icon-box metric-blue">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
-              </div>
-              <div class="metric-data">
-                <h4 id="metricTotalOrders">0</h4>
-                <p>Total Orders</p>
-              </div>
+              <h1 style="font-size:1.85rem; margin-top:6px; color:#0f172a; font-weight:900;">Admin Dashboard</h1>
             </div>
 
-            <div class="metric-card">
-              <div class="metric-icon-box metric-yellow">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-              </div>
-              <div class="metric-data">
-                <h4 id="metricPendingOrders">0</h4>
-                <p>Pending Inquiries</p>
-              </div>
-            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+              <!-- Quick Action to Create Bill -->
+              <button type="button" class="btn btn-primary btn-sm" onclick="if(window.app){app.openManualBillModal();}else{openModal('manualOrderModal');}" style="font-weight:800; padding:9px 18px; border-radius:10px; display:inline-flex; align-items:center; gap:6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                <span>+ Create Bill</span>
+              </button>
 
-            <div class="metric-card">
-              <div class="metric-icon-box metric-cyan">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-              </div>
-              <div class="metric-data">
-                <h4 id="metricProgressOrders">0</h4>
-                <p>In Progress</p>
-              </div>
-            </div>
-
-            <div class="metric-card">
-              <div class="metric-icon-box metric-purple">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              </div>
-              <div class="metric-data">
-                <h4 id="metricCompletedOrders">0</h4>
-                <p>Completed Websites</p>
+              <!-- Three-Dot Menu (⋮) Dropdown -->
+              <div class="three-dot-menu-wrap" id="threeDotMenuWrap">
+                <button type="button" class="three-dot-btn" id="threeDotBtn" title="More Options &amp; Database Settings" aria-label="Menu" onclick="if(window.app){app.toggleThreeDotMenu(event);}">
+                  ⋮
+                </button>
+                <div class="three-dot-dropdown" id="threeDotDropdown">
+                  <div class="three-dot-dropdown-header">Operations &amp; Finance</div>
+                  <button type="button" class="three-dot-item" onclick="if(window.app){app.openManualBillModal(); app.closeThreeDotMenu();}">
+                    <span>📝</span>
+                    <span>+ Create Official Bill</span>
+                  </button>
+                  <button type="button" class="three-dot-item" onclick="if(window.app){app.openFinancialOverviewModal(); app.closeThreeDotMenu();}">
+                    <span>📊</span>
+                    <span>Financial &amp; Profit Overview</span>
+                  </button>
+                  <div class="three-dot-divider"></div>
+                  <div class="three-dot-dropdown-header">Cloud &amp; Database</div>
+                  <button type="button" class="three-dot-item" onclick="if(window.app){app.openCloudflareModal(); app.closeThreeDotMenu();}">
+                    <span>☁️</span>
+                    <span>Cloudflare D1 Database</span>
+                  </button>
+                  <button type="button" class="three-dot-item" onclick="if(window.app){app.syncAllOrdersToCloudflare(); app.closeThreeDotMenu();}">
+                    <span>⚡</span>
+                    <span>Sync to Cloud Database</span>
+                  </button>
+                  <button type="button" class="three-dot-item" onclick="if(window.app){app.exportOrdersCSV(); app.closeThreeDotMenu();}">
+                    <span>📥</span>
+                    <span>Export All Data (CSV)</span>
+                  </button>
+                  <button type="button" class="three-dot-item" onclick="if(window.app){app.resetBillSequence(true); app.closeThreeDotMenu();}">
+                    <span>↻</span>
+                    <span>Reset Bill Sequence</span>
+                  </button>
+                  <button type="button" class="three-dot-item danger" onclick="if(window.app){app.clearAllBills(true); app.closeThreeDotMenu();}">
+                    <span>🗑️</span>
+                    <span>Clear &amp; Reset All Bills</span>
+                  </button>
+                  <div class="three-dot-divider"></div>
+                  <button type="button" class="three-dot-item danger" onclick="if(window.app){app.handleAdminLogout(); app.closeThreeDotMenu();}">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span>Sign Out</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Billing & Profit Financial Overview Grid -->
-          <div style="margin-bottom: 26px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-              <h3 style="font-size:1.05rem; color:#0f172a; font-weight:800; display:flex; align-items:center; gap:8px;">
-                <span style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:#ecfdf5; color:#059669; font-size:0.95rem;">💰</span>
-                Billing &amp; Profit Financial Overview
-              </h3>
-              <span style="font-size:0.76rem; color:var(--text-secondary); background:#f1f5f9; padding:3px 8px; border-radius:6px; font-weight:600;">
-                Real-Time Profit Tracking
-              </span>
+          <!-- Clean Two-Tab View Switcher (Bookings vs Bills) & Search -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:20px;">
+            <div style="display:inline-flex; background:#f1f5f9; padding:4px; border-radius:12px; border:1px solid #e2e8f0;">
+              <button type="button" id="tabBtnBookings" class="admin-view-tab-btn active" onclick="if(window.app){app.switchDashboardTab('bookings');}">
+                <span>🌐 Website Bookings</span>
+                <span id="badgeBookingsCount" style="background:#0284c7; color:#fff; font-size:0.75rem; padding:2px 8px; border-radius:20px; font-weight:800;">0</span>
+              </button>
+              <button type="button" id="tabBtnBills" class="admin-view-tab-btn" onclick="if(window.app){app.switchDashboardTab('bills');}">
+                <span>🧾 Created Bills</span>
+                <span id="badgeBillsCount" style="background:#cbd5e1; color:#334155; font-size:0.75rem; padding:2px 8px; border-radius:20px; font-weight:800;">0</span>
+              </button>
             </div>
-            
-            <div class="admin-metrics-grid" style="margin-bottom: 0;">
-              <!-- Total Revenue Card -->
-              <div class="metric-card" style="border-left:4px solid #0284c7;">
-                <div class="metric-icon-box metric-blue">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                </div>
+
+            <!-- Search Filter Input -->
+            <div style="position:relative; min-width:260px; flex:1; max-width:380px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="position:absolute; left:14px; top:13px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="adminOrderSearch" class="form-control" placeholder="Search client name, phone, ID..." style="padding-left:38px; border-radius:10px; font-size:0.88rem; background:#ffffff;">
+            </div>
+          </div>
+
+          <!-- ================================================================
+               MAIN SECTION 1: WEBSITE BOOKINGS VIEW
+               ================================================================ -->
+          <div id="viewBookings" style="display:block;">
+            <div class="orders-table-wrapper" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>Booking ID &amp; Date</th>
+                    <th>Client Name &amp; Contact</th>
+                    <th>Business &amp; Website Requested</th>
+                    <th>Timeline &amp; Requirements</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminBookingsTableBody">
+                  <tr id="emptyBookingsRow" style="display:none;">
+                    <td colspan="6" style="text-align:center; padding: 48px 20px; color:var(--text-secondary);">
+                      <div style="font-size:2.2rem; margin-bottom:8px;">🌐</div>
+                      <strong style="color:#0f172a; font-size:1.1rem; display:block; margin-bottom:6px;">No Website Bookings Yet</strong>
+                      <p style="font-size:0.88rem; color:#64748b;">Client inquiries submitted on the website will automatically appear here.</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               MAIN SECTION 2: CREATED BILLS VIEW
+               ================================================================ -->
+          <div id="viewBills" style="display:none;">
+            <div class="orders-table-wrapper" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>Invoice No &amp; Date</th>
+                    <th>Client &amp; Business</th>
+                    <th>Project Service Details</th>
+                    <th>Amount &amp; Payment Status</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminBillsTableBody">
+                  <tr id="emptyBillsRow" style="display:none;">
+                    <td colspan="6" style="text-align:center; padding: 48px 20px; color:var(--text-secondary);">
+                      <div style="font-size:2.2rem; margin-bottom:8px;">🧾</div>
+                      <strong style="color:#0f172a; font-size:1.1rem; display:block; margin-bottom:6px;">No Created Bills Yet</strong>
+                      <p style="font-size:0.88rem; color:#64748b; margin-bottom:14px;">Create your first official bill or invoice.</p>
+                      <button type="button" class="btn btn-primary btn-sm" onclick="if(window.app){app.openManualBillModal();}else{openModal('manualOrderModal');}" style="font-weight:700;">
+                        + Create Official Bill
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Financial & Profit Overview Modal (Accessible only from Three-Dot Menu ⋮) -->
+        <div class="modal-overlay" id="financialOverviewModal">
+          <div class="modal-content" style="max-width:920px; max-height:90vh; overflow-y:auto; border-radius:18px; padding:28px; box-shadow:0 25px 60px -15px rgba(2,132,199,0.35);">
+            <button class="modal-close-btn" onclick="closeModal('financialOverviewModal')">✕</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+              <div>
+                <h3 style="font-size:1.35rem; color:#0f172a; font-weight:800; margin:0;">📊 Financial &amp; Profit Overview</h3>
+                <p style="font-size:0.86rem; color:#64748b; margin:4px 0 0;">Real-Time Financial &amp; Order Volume Performance</p>
+              </div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.exportOrdersCSV();}" style="font-weight:700;">
+                📥 Export CSV
+              </button>
+            </div>
+
+            <!-- Key Metrics Grid -->
+            <div class="admin-metrics-grid" style="margin-bottom:20px;">
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('total');}" style="cursor:pointer;" title="Click for details">
+                <div class="metric-icon-box metric-blue">📦</div>
                 <div class="metric-data">
-                  <h4 id="metricTotalBilled" style="font-size:1.55rem; color:#0284c7;">₹0</h4>
+                  <h4 id="metricTotalOrders">0</h4>
+                  <p>Total Orders</p>
+                </div>
+              </div>
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('pending');}" style="cursor:pointer;" title="Click for details">
+                <div class="metric-icon-box metric-yellow">⏳</div>
+                <div class="metric-data">
+                  <h4 id="metricPendingOrders">0</h4>
+                  <p>Pending Inquiries</p>
+                </div>
+              </div>
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('progress');}" style="cursor:pointer;" title="Click for details">
+                <div class="metric-icon-box metric-cyan">⚙️</div>
+                <div class="metric-data">
+                  <h4 id="metricProgressOrders">0</h4>
+                  <p>In Progress</p>
+                </div>
+              </div>
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('completed');}" style="cursor:pointer;" title="Click for details">
+                <div class="metric-icon-box metric-purple">✅</div>
+                <div class="metric-data">
+                  <h4 id="metricCompletedOrders">0</h4>
+                  <p>Completed Websites</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Financial Revenue & Profit Grid -->
+            <div class="admin-metrics-grid">
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('revenue');}" style="border-left:4px solid #0284c7; cursor:pointer;" title="Click for breakdown">
+                <div class="metric-icon-box metric-blue">₹</div>
+                <div class="metric-data">
+                  <h4 id="metricTotalBilled" style="color:#0284c7;">₹0</h4>
                   <p>Total Billed Revenue</p>
                 </div>
               </div>
-
-              <!-- Project Expenses Card -->
-              <div class="metric-card" style="border-left:4px solid #f43f5e;">
-                <div class="metric-icon-box" style="background:#fff1f2; color:#e11d48;">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"></path><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="13" x2="18" y2="18"></line><line x1="23" y1="13" x2="11" y2="13"></line></svg>
-                </div>
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('expenses');}" style="border-left:4px solid #f43f5e; cursor:pointer;" title="Click for breakdown">
+                <div class="metric-icon-box" style="background:#fff1f2; color:#e11d48;">📉</div>
                 <div class="metric-data">
-                  <h4 id="metricTotalExpenses" style="font-size:1.55rem; color:#e11d48;">₹0</h4>
-                  <p>Project Costs / Expenses</p>
+                  <h4 id="metricTotalExpenses" style="color:#e11d48;">₹0</h4>
+                  <p>Project Expenses</p>
                 </div>
               </div>
-
-              <!-- Net Profit Card (Featured) -->
-              <div class="metric-card" style="border-left:4px solid #10b981; background:linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
-                <div class="metric-icon-box" style="background:#dcfce7; color:#15803d;">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
-                </div>
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('profit');}" style="border-left:4px solid #10b981; background:linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); cursor:pointer;" title="Click for analysis">
+                <div class="metric-icon-box" style="background:#dcfce7; color:#15803d;">💰</div>
                 <div class="metric-data">
                   <div style="display:flex; align-items:baseline; gap:6px;">
-                    <h4 id="metricNetProfit" style="font-size:1.55rem; color:#15803d;">₹0</h4>
+                    <h4 id="metricNetProfit" style="color:#15803d;">₹0</h4>
                     <span id="metricProfitMarginBadge" style="font-size:0.74rem; font-weight:700; color:#15803d; background:#bbf7d0; padding:2px 6px; border-radius:6px;">0% Margin</span>
                   </div>
                   <p style="font-weight:700; color:#166534;">Net Calculated Profit</p>
                 </div>
               </div>
-
-              <!-- Realized Collections Card -->
-              <div class="metric-card" style="border-left:4px solid #8b5cf6;">
-                <div class="metric-icon-box metric-purple">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                </div>
+              <div class="metric-card" onclick="if(window.app){app.showMetricDetails('collected');}" style="border-left:4px solid #8b5cf6; cursor:pointer;" title="Click for details">
+                <div class="metric-icon-box metric-purple">💳</div>
                 <div class="metric-data">
-                  <h4 id="metricTotalCollected" style="font-size:1.55rem; color:#6d28d9;">₹0</h4>
-                  <p>Payments Received (Paid)</p>
+                  <h4 id="metricTotalCollected" style="color:#6d28d9;">₹0</h4>
+                  <p>Payments Received</p>
                 </div>
               </div>
             </div>
-          </div>
-
-          <!-- Search & Filter Controls -->
-          <div class="admin-table-controls">
-            <div class="admin-search-box">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <input type="text" id="adminOrderSearch" class="form-control" placeholder="Search orders by Name, Phone, ID, or Business...">
-            </div>
-
-            <div class="admin-filter-tabs">
-              <button class="filter-tab active" data-filter="all">All Orders</button>
-              <button class="filter-tab" data-filter="pending">Pending</button>
-              <button class="filter-tab" data-filter="progress">In Progress</button>
-              <button class="filter-tab" data-filter="completed">Completed</button>
-            </div>
-          </div>
-
-          <!-- Orders Table -->
-          <div class="orders-table-wrapper">
-            <table class="orders-table">
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Client &amp; Contact</th>
-                  <th>Business &amp; Website Type</th>
-                  <th>Bill &amp; Profit Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminOrdersTableBody">
-                <tr id="emptyOrdersRow" style="display:none;">
-                  <td colspan="6" style="text-align:center; padding: 48px 20px; color:var(--text-secondary);">
-                    <div style="font-size:2.2rem; margin-bottom:8px;">📋</div>
-                    <strong style="color:#0f172a; font-size:1.1rem; display:block; margin-bottom:6px;">No Client Orders in Database Yet</strong>
-                    <p style="font-size:0.88rem; color:#64748b; margin-bottom:16px;">Create your first official bill or invoice. It will be automatically saved to Cloudflare D1!</p>
-                    <button type="button" class="btn btn-primary" onclick="if(window.app){app.openManualBillModal();}else{openModal('manualOrderModal');}" style="font-weight:700;">
-                      + Create Official Bill
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
@@ -389,6 +409,14 @@
     <div class="modal-content">
       <button class="modal-close-btn" onclick="closeModal('adminOrderDetailsModal')">✕</button>
       <div id="adminOrderDetailsContent"></div>
+    </div>
+  </div>
+
+  <!-- Interactive Metric / Menu Option Details Modal -->
+  <div class="modal-overlay" id="metricDetailsModal">
+    <div class="modal-content" style="max-width:760px; max-height:90vh; overflow-y:auto; border-radius:18px; padding:26px; box-shadow: 0 25px 60px -15px rgba(2, 132, 199, 0.35);">
+      <button class="modal-close-btn" onclick="closeModal('metricDetailsModal')">✕</button>
+      <div id="metricDetailsContent"></div>
     </div>
   </div>
 
@@ -997,28 +1025,59 @@ For any queries / support contact +91 8248688471.</textarea>
       }
     });
 
-    // Failsafe direct handlers to guarantee Admin Portal Login opens
+    // Failsafe direct handlers: Secure Session Authentication and Modular Menu Navigation
     document.addEventListener('DOMContentLoaded', () => {
-      // If already logged in, ensure dashboard is visible
-      if (sessionStorage.getItem('techcode_admin_session') === 'true' || localStorage.getItem('techcode_admin_session') === 'true') {
-        const card = document.getElementById('adminLoginCard');
-        const dash = document.getElementById('adminDashboardContainer');
-        if (card) card.style.display = 'none';
-        if (dash) dash.style.display = 'block';
+      const isAuth = sessionStorage.getItem('techcode_admin_session') === 'true';
+      const card = document.getElementById('adminLoginCard');
+      const dash = document.getElementById('adminDashboardContainer');
+      
+      if (card && dash) {
+        if (isAuth) {
+          card.style.display = 'none';
+          dash.style.display = 'block';
+          if (window.app) {
+            try { window.app.switchAdminSection('sectionMainMenu'); } catch(e) {}
+            try { window.app.updateAdminMetrics(); } catch(e) {}
+            try { window.app.renderAdminOrders(); } catch(e) {}
+          }
+        } else {
+          card.style.display = 'block';
+          dash.style.display = 'none';
+        }
       }
 
-      const qBtn = document.getElementById('quickLoginBtn');
-      if (qBtn) {
-        qBtn.addEventListener('click', () => {
-          if (window.app && typeof window.app.quickAdminLogin === 'function') {
-            window.app.quickAdminLogin();
+      // Toggle Passkey visibility
+      const toggleBtn = document.getElementById('togglePassBtn');
+      const passInput = document.getElementById('adminSecurityPasskey');
+      if (toggleBtn && passInput) {
+        toggleBtn.addEventListener('click', () => {
+          passInput.type = (passInput.type === 'password') ? 'text' : 'password';
+        });
+      }
+
+      // Direct fallback handler for login form submission
+      const loginForm = document.getElementById('adminLoginForm');
+      if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+          if (window.app && typeof window.app.handleAdminLogin === 'function') {
+            window.app.handleAdminLogin(e);
           } else {
-            sessionStorage.setItem('techcode_admin_session', 'true');
-            localStorage.setItem('techcode_admin_session', 'true');
-            const card = document.getElementById('adminLoginCard');
-            const dash = document.getElementById('adminDashboardContainer');
-            if (card) card.style.display = 'none';
-            if (dash) dash.style.display = 'block';
+            e.preventDefault();
+            const key = passInput ? passInput.value.trim() : '';
+            if (key === 'techcode@12345' || key.toUpperCase() === 'KUBERA' || key.toLowerCase() === 'techcodecreations@gmail.com') {
+              sessionStorage.setItem('techcode_admin_session', 'true');
+              if (card) card.style.display = 'none';
+              if (dash) dash.style.display = 'block';
+              if (window.app && typeof window.app.switchAdminSection === 'function') {
+                window.app.switchAdminSection('sectionMainMenu');
+              }
+            } else {
+              const err = document.getElementById('adminLoginError');
+              if (err) {
+                err.textContent = 'Access Denied: Invalid Security Key.';
+                err.style.display = 'block';
+              }
+            }
           }
         });
       }

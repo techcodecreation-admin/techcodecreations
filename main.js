@@ -92,34 +92,69 @@ class TechCodeApp {
     this.initCloudflareSync();
   }
 
+  getDefaultOrders() {
+    return [
+      // Sample Live Website Bookings
+      {
+        id: "TCC-2026-8421",
+        date: "2026-11-12 14:30",
+        clientName: "Ramesh Kumar",
+        businessName: "RK Modern Silks",
+        phone: "9842109876",
+        email: "ramesh.silks@gmail.com",
+        websiteType: "E-Commerce Web Application",
+        timeline: "10-15 Days",
+        features: ["Product Catalog", "UPI Checkout", "Admin Dashboard"],
+        details: "Need a modern saree and silk store with mobile payment gateway.",
+        status: "Pending",
+        notes: "Submitted through booking form.",
+        isWebsiteBooking: true
+      },
+      {
+        id: "TCC-2026-5192",
+        date: "2026-11-11 11:15",
+        clientName: "Dr. Priya Sundaram",
+        businessName: "Sundaram Dental Clinic",
+        phone: "9789012345",
+        email: "priya.dental@gmail.com",
+        websiteType: "Doctor Portfolio & Appointment Booking",
+        timeline: "7 Days",
+        features: ["Appointment Booking", "Google Reviews", "WhatsApp Chat"],
+        details: "Patient appointment schedule and clinic treatment portfolio.",
+        status: "In Progress",
+        notes: "Submitted through booking form.",
+        isWebsiteBooking: true
+      }
+    ];
+  }
+
   loadOrders() {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.ORDERS);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        let parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          // Remove all previous demo bills from localStorage
-          const demoIds = ["TCC-2026-011", "TCC-2026-012", "TCC-2026-013", "TCC-2026-014", "TCC/2026/011", "TCC/2026/012", "TCC/2026/013", "TCC/2026/014"];
-          const cleaned = parsed.filter(o => {
-            const id = (o.id || "").trim();
-            const inv = (o.invoiceNo || "").trim();
-            const name = (o.clientName || "").toLowerCase();
-            if (demoIds.includes(id) || demoIds.includes(inv) || name.includes("spatakal") || name.includes("ramesh babu") || name.includes("saravanan k") || name.includes("prakash raj")) {
-              return false;
-            }
-            return true;
-          });
-          if (cleaned.length !== parsed.length) {
-            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(cleaned));
+          // Automatic cleanup of old mock/sample bills
+          const cleanedKey = localStorage.getItem("techcode_old_bills_reset_v2");
+          const hasOldSampleBills = parsed.some(o => o.id === "TCC-2026-001" || o.id === "TCC-2026-002" || o.invoiceNo === "TCC/2026/001");
+          if (!cleanedKey || hasOldSampleBills) {
+            parsed = parsed.filter(o => !o.invoiceNo && !o.isManualBill && !String(o.id || "").startsWith("TCC-2026-00"));
+            localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(parsed));
+            localStorage.setItem("techcode_old_bills_reset_v2", "true");
+            localStorage.removeItem("techcode_last_bill_seq");
+            localStorage.setItem("techcode_bill_seq_override", "1");
           }
-          return cleaned;
+          return parsed;
         }
       }
     } catch (e) {
       console.error("Error reading localStorage:", e);
     }
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify([]));
-    return [];
+    const defaults = this.getDefaultOrders();
+    try {
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(defaults));
+    } catch (e) {}
+    return defaults;
   }
 
   saveOrders() {
@@ -319,10 +354,46 @@ class TechCodeApp {
       contactForm.addEventListener("submit", (e) => this.handleContactSubmit(e));
     }
 
-    // Check existing admin session
-    if (sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true" || localStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true") {
+    // Admin Session Security: Only authenticate if active session exists in sessionStorage
+    const hasValidSession = sessionStorage.getItem(STORAGE_KEYS.ADMIN_SESSION) === "true";
+    if (hasValidSession) {
       this.showAdminDashboard();
+    } else {
+      const loginCard = document.getElementById("adminLoginCard");
+      const dashboard = document.getElementById("adminDashboardContainer");
+      if (loginCard) loginCard.style.display = "block";
+      if (dashboard) dashboard.style.display = "none";
     }
+
+    // Auto-close Three-Dot Menu (⋮) on click outside
+    document.addEventListener("click", (e) => {
+      const wrap = document.getElementById("threeDotMenuWrap");
+      if (wrap && !wrap.contains(e.target)) {
+        this.closeThreeDotMenu();
+      }
+    });
+
+    // Real-time Automatic Synchronization across browser tabs/windows
+    window.addEventListener("storage", (e) => {
+      if (e.key === STORAGE_KEYS.ORDERS) {
+        this.orders = this.loadOrders();
+        this.renderAdminOrders();
+      }
+    });
+
+    // 3-second live update loop to instantly reflect newly submitted website bookings & bills
+    setInterval(() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.ORDERS);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length !== (this.orders ? this.orders.length : 0)) {
+            this.orders = parsed;
+            this.renderAdminOrders();
+          }
+        }
+      } catch (err) {}
+    }, 3000);
 
     // Check URL parameters for direct bill or QR view
     const urlParams = new URLSearchParams(window.location.search);
@@ -392,6 +463,7 @@ class TechCodeApp {
       details: details || "Custom website requested.",
       status: "Pending",
       notes: "Submitted through booking form.",
+      isWebsiteBooking: true,
       billAmount: 15000,
       paidAmount: 0,
       paymentStatus: "PENDING REVIEW"
@@ -445,66 +517,55 @@ class TechCodeApp {
   // Admin Authentication
   handleAdminLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
+    const passkeyField = document.getElementById("adminSecurityPasskey");
     const userField = document.getElementById("adminUsername");
     const passField = document.getElementById("adminPassword");
     const errorElem = document.getElementById("adminLoginError");
 
-    const username = (userField ? userField.value : "").trim();
-    const password = (passField ? passField.value : "").trim();
+    const passkeyVal = passkeyField ? passkeyField.value.trim() : "";
+    const username = userField ? userField.value.trim() : "";
+    const password = passField ? passField.value.trim() : "";
 
-    // Support case-insensitive variations & common typos
-    const normUser = username.toLowerCase().replace(/\s+/g, "");
-    const validUsers = [
-      "kubera",
-      "kuberamoorthy",
-      "kuberan",
-      "techcodecreation",
-      "techcodecreations",
-      "techcodecreations@gmail.com",
-      "admin",
-      "admin@techcodecreations.com"
-    ];
-
-    const validPass = [
+    const validKeys = [
       "techcode@12345",
       "techcode12345",
       "techcodecreations@gmail.com",
       "kubera",
       "kuberamoorthy",
       "admin",
-      "admin123",
-      "admin@123"
+      "admin123"
     ];
 
-    const isUserValid = validUsers.includes(normUser) || username.toUpperCase() === "KUBERA" || username === ADMIN_CREDENTIALS.username || normUser.includes("techcode");
-    const isPassValid = validPass.includes(password.toLowerCase()) || password === ADMIN_CREDENTIALS.password || password === "techcodecreations@gmail.com" || password === "techcode@12345";
+    let isAuthenticated = false;
 
-    if (isUserValid && isPassValid) {
+    if (passkeyVal) {
+      if (validKeys.includes(passkeyVal.toLowerCase()) || passkeyVal === ADMIN_CREDENTIALS.password || passkeyVal.toUpperCase() === "KUBERA") {
+        isAuthenticated = true;
+      }
+    } else if (username || password) {
+      const isUserValid = validKeys.includes(username.toLowerCase()) || username.toUpperCase() === "KUBERA" || username === ADMIN_CREDENTIALS.username;
+      const isPassValid = validKeys.includes(password.toLowerCase()) || password === ADMIN_CREDENTIALS.password;
+      if (isUserValid && isPassValid) {
+        isAuthenticated = true;
+      }
+    }
+
+    if (isAuthenticated) {
       if (errorElem) errorElem.style.display = "none";
       sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
-      localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
-      this.showToast("Welcome back, KUBERA! Admin session active.", "success");
+      sessionStorage.removeItem("techcode_admin_logged_out");
+      if (passkeyField) passkeyField.value = "";
+      if (passField) passField.value = "";
+      this.showToast("Admin authenticated successfully.", "success");
       this.showAdminDashboard();
+      this.switchAdminSection("sectionMainMenu");
     } else {
       if (errorElem) {
-        errorElem.innerHTML = "Access Denied: Invalid credentials. Username: <strong>KUBERA</strong> (or <strong>techcodecreations@gmail.com</strong>), Password: <strong>techcode@12345</strong>";
+        errorElem.textContent = "Access Denied: Invalid Security Key. Please try again.";
         errorElem.style.display = "block";
       }
-      this.showToast("Access Denied: Invalid credentials.", "error");
+      this.showToast("Access Denied: Invalid Security Key.", "error");
     }
-  }
-
-  quickAdminLogin() {
-    sessionStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
-    localStorage.setItem(STORAGE_KEYS.ADMIN_SESSION, "true");
-    const userField = document.getElementById("adminUsername");
-    const passField = document.getElementById("adminPassword");
-    const errorElem = document.getElementById("adminLoginError");
-    if (userField) userField.value = "techcodecreations@gmail.com";
-    if (passField) passField.value = ADMIN_CREDENTIALS.password;
-    if (errorElem) errorElem.style.display = "none";
-    this.showToast("⚡ Admin Access Granted for techcodecreations@gmail.com!", "success");
-    this.showAdminDashboard();
   }
 
   showAdminDashboard() {
@@ -513,6 +574,7 @@ class TechCodeApp {
     if (loginCard) loginCard.style.display = "none";
     if (dashboard) {
       dashboard.style.display = "block";
+      this.switchDashboardTab(this.activeDashboardTab || "bookings");
       try {
         this.updateAdminMetrics();
       } catch (err) {
@@ -526,18 +588,65 @@ class TechCodeApp {
     }
   }
 
+  switchAdminSection(sectionId) {
+    const validSections = ["sectionMainMenu", "sectionAnalytics", "sectionOrders", "sectionCreateBill", "sectionCloudDb"];
+    const targetId = validSections.includes(sectionId) ? sectionId : "sectionMainMenu";
+
+    validSections.forEach(secId => {
+      const el = document.getElementById(secId);
+      if (el) {
+        el.style.display = (secId === targetId) ? "block" : "none";
+      }
+    });
+
+    // Update active tab buttons
+    document.querySelectorAll(".admin-nav-tab-btn").forEach(btn => {
+      if (btn.getAttribute("data-target") === targetId) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    // Refresh sub-views if needed
+    if (targetId === "sectionOrders") {
+      try { this.renderAdminOrders(); } catch (e) {}
+    } else if (targetId === "sectionAnalytics") {
+      try { this.updateAdminMetrics(); } catch (e) {}
+    } else if (targetId === "sectionMainMenu") {
+      try {
+        this.updateAdminMetrics();
+        const statOrders = document.getElementById("menuStatOrders");
+        if (statOrders) statOrders.textContent = (this.orders ? this.orders.length : 0) + " Orders";
+        const totalBilled = (this.orders || []).reduce((sum, o) => sum + (Number(o.netAmount) || Number(o.billAmount) || 0), 0);
+        const statRevenue = document.getElementById("menuStatRevenue");
+        if (statRevenue) statRevenue.textContent = "₹" + totalBilled.toLocaleString("en-IN");
+      } catch (e) {}
+    }
+
+    // Scroll smoothly to top
+    const dash = document.getElementById("adminDashboardContainer");
+    if (dash) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   handleAdminLogout() {
     sessionStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
+    sessionStorage.setItem("techcode_admin_logged_out", "true");
     localStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
     const loginCard = document.getElementById("adminLoginCard");
     const dashboard = document.getElementById("adminDashboardContainer");
     if (loginCard && dashboard) {
       loginCard.style.display = "block";
       dashboard.style.display = "none";
+      const passkeyEl = document.getElementById("adminSecurityPasskey");
+      if (passkeyEl) passkeyEl.value = "";
       const passEl = document.getElementById("adminPassword");
       if (passEl) passEl.value = "";
     }
-    this.showToast("Admin logged out safely.", "info");
+    this.switchAdminSection("sectionMainMenu");
+    this.showToast("Admin session ended securely.", "info");
   }
 
   updateAdminMetrics() {
@@ -586,65 +695,233 @@ class TechCodeApp {
     }
   }
 
-  renderAdminOrders() {
-    const tbody = document.getElementById("adminOrdersTableBody");
-    const emptyRow = document.getElementById("emptyOrdersRow");
-    if (!tbody) return;
+  toggleThreeDotMenu(e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const dropdown = document.getElementById("threeDotDropdown");
+    if (dropdown) {
+      dropdown.classList.toggle("show");
+    }
+  }
 
-    let filtered = this.orders.filter(order => {
-      if (this.currentFilter === "pending" && order.status !== "Pending") return false;
-      if (this.currentFilter === "progress" && (order.status !== "In Progress" && order.status !== "In Review")) return false;
-      if (this.currentFilter === "completed" && order.status !== "Completed") return false;
+  closeThreeDotMenu() {
+    const dropdown = document.getElementById("threeDotDropdown");
+    if (dropdown) {
+      dropdown.classList.remove("show");
+    }
+  }
 
-      if (this.searchQuery) {
-        const fullString = `${order.id} ${order.clientName} ${order.phone} ${order.businessName} ${order.websiteType}`.toLowerCase();
-        if (!fullString.includes(this.searchQuery)) return false;
+  switchDashboardTab(tabName) {
+    this.activeDashboardTab = tabName || "bookings";
+    const viewBookings = document.getElementById("viewBookings");
+    const viewBills = document.getElementById("viewBills");
+    const btnBookings = document.getElementById("tabBtnBookings");
+    const btnBills = document.getElementById("tabBtnBills");
+
+    if (this.activeDashboardTab === "bills") {
+      if (viewBookings) viewBookings.style.display = "none";
+      if (viewBills) viewBills.style.display = "block";
+      if (btnBookings) {
+        btnBookings.classList.remove("active");
+        const b = document.getElementById("badgeBookingsCount");
+        if (b) { b.style.background = "#cbd5e1"; b.style.color = "#334155"; }
       }
-      return true;
-    });
+      if (btnBills) {
+        btnBills.classList.add("active");
+        const b = document.getElementById("badgeBillsCount");
+        if (b) { b.style.background = "#0284c7"; b.style.color = "#ffffff"; }
+      }
+    } else {
+      if (viewBookings) viewBookings.style.display = "block";
+      if (viewBills) viewBills.style.display = "none";
+      if (btnBookings) {
+        btnBookings.classList.add("active");
+        const b = document.getElementById("badgeBookingsCount");
+        if (b) { b.style.background = "#0284c7"; b.style.color = "#ffffff"; }
+      }
+      if (btnBills) {
+        btnBills.classList.remove("active");
+        const b = document.getElementById("badgeBillsCount");
+        if (b) { b.style.background = "#cbd5e1"; b.style.color = "#334155"; }
+      }
+    }
+  }
+
+  openFinancialOverviewModal() {
+    try { this.updateAdminMetrics(); } catch (e) {}
+    const modal = document.getElementById("financialOverviewModal");
+    if (modal) modal.classList.add("active");
+  }
+
+  closeFinancialOverviewModal() {
+    const modal = document.getElementById("financialOverviewModal");
+    if (modal) modal.classList.remove("active");
+  }
+
+  convertBookingToBill(orderId) {
+    const order = (this.orders || []).find(o => o.id === orderId);
+    if (!order) {
+      this.showToast("Order not found.", "error");
+      return;
+    }
+
+    // Open the manual bill modal
+    this.openManualBillModal();
+
+    // Pre-fill form fields with booking information
+    const fName = document.getElementById("manualName");
+    const fPhone = document.getElementById("manualPhone");
+    const fEmail = document.getElementById("manualEmail");
+    const fProject = document.getElementById("manualProjectName");
+    const fType = document.getElementById("manualType");
+    const fDesc = document.getElementById("manualDescription");
+    const fNotes = document.getElementById("manualNotes");
+
+    if (fName) fName.value = order.clientName || "";
+    if (fPhone) fPhone.value = order.phone || "";
+    if (fEmail && order.email && !order.email.includes("Not provided")) fEmail.value = order.email;
+    if (fProject) fProject.value = order.businessName || "";
+    
+    if (fType) {
+      const typeStr = (order.websiteType || "").toLowerCase();
+      for (let i = 0; i < fType.options.length; i++) {
+        if (fType.options[i].text.toLowerCase().includes(typeStr) || typeStr.includes(fType.options[i].value.toLowerCase())) {
+          fType.selectedIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (fDesc) {
+      fDesc.value = `Custom Web Development - ${order.businessName || order.websiteType || 'Online Presence'}`;
+      fDesc.dataset.userEdited = "true";
+    }
+
+    if (fNotes) {
+      fNotes.value = `Converted from Website Booking #${order.id}. ${order.details || ''}`;
+    }
+
+    this.showToast(`Pre-filled bill form with booking details for ${order.clientName}!`, "success");
+  }
+
+  exportOrdersCSV() {
+    return this.exportOrdersToCSV();
+  }
+
+  syncAllOrdersToCloudflare(showNotify = true) {
+    return this.syncLocalOrdersToCloudflare(showNotify);
+  }
+
+  clearAllBills(confirmUser = false) {
+    if (confirmUser && typeof window.confirm === "function") {
+      const ok = window.confirm("Are you sure you want to clear all bills and reset the bill sequence to #001?\n(Website Bookings will NOT be deleted).");
+      if (!ok) return;
+    }
+
+    // Filter out all bills, keeping only website bookings
+    this.orders = (this.orders || []).filter(o => !o.invoiceNo && !o.isManualBill && !String(o.id || "").startsWith("TCC-2026-00"));
+    
+    // Reset sequence tracking
+    try {
+      localStorage.removeItem("techcode_last_bill_seq");
+      localStorage.setItem("techcode_bill_seq_override", "1");
+      localStorage.setItem("techcode_old_bills_reset_v2", "true");
+    } catch (e) {}
+
+    this.saveOrders();
+    this.renderAdminOrders();
+    this.updateAdminMetrics();
+    this.updateNextBillHeaderBadge();
+
+    // Sync state with cloud database if available
+    try {
+      this.syncLocalOrdersToCloudflare(false);
+    } catch (e) {}
+
+    this.showToast("🗑️ All bills have been cleared and sequence reset to #001!", "success");
+  }
+
+  renderAdminOrders() {
+    const all = this.orders || [];
+
+    // Distinct separation: Website Bookings vs Created Bills
+    let bookings = all.filter(o => !o.invoiceNo && !o.isManualBill);
+    let bills = all.filter(o => Boolean(o.invoiceNo || o.isManualBill));
+
+    // Live search query filtering
+    if (this.searchQuery) {
+      const q = this.searchQuery;
+      bookings = bookings.filter(order => {
+        const full = `${order.id} ${order.clientName} ${order.phone} ${order.businessName} ${order.websiteType} ${order.details || ''}`.toLowerCase();
+        return full.includes(q);
+      });
+      bills = bills.filter(order => {
+        const full = `${order.id} ${order.invoiceNo || ''} ${order.clientName} ${order.phone} ${order.businessName} ${order.websiteType} ${order.category || ''}`.toLowerCase();
+        return full.includes(q);
+      });
+    }
+
+    // Update Tab Count Badges
+    const bBadge = document.getElementById("badgeBookingsCount");
+    if (bBadge) bBadge.textContent = bookings.length;
+
+    const billsBadge = document.getElementById("badgeBillsCount");
+    if (billsBadge) billsBadge.textContent = bills.length;
 
     const nextBillBadge = document.getElementById("nextBillNoHeaderBadge");
     if (nextBillBadge) nextBillBadge.textContent = this.getNextInvoiceNumber();
 
-    tbody.querySelectorAll("tr:not(#emptyOrdersRow)").forEach(tr => tr.remove());
+    // Render both dedicated tables
+    this.renderAdminBookings(bookings);
+    this.renderAdminBills(bills);
 
-    if (filtered.length === 0) {
+    // Keep financial overview modal metrics synchronized
+    try {
+      this.updateAdminMetrics();
+    } catch (e) {}
+  }
+
+  renderAdminBookings(bookings) {
+    const tbody = document.getElementById("adminBookingsTableBody");
+    const emptyRow = document.getElementById("emptyBookingsRow");
+    if (!tbody) return;
+
+    tbody.querySelectorAll("tr:not(#emptyBookingsRow)").forEach(tr => tr.remove());
+
+    if (!bookings || bookings.length === 0) {
       if (emptyRow) emptyRow.style.display = "table-row";
       return;
     }
     if (emptyRow) emptyRow.style.display = "none";
 
-    filtered.forEach(order => {
+    bookings.forEach(order => {
       const tr = document.createElement("tr");
 
       const waMsg = encodeURIComponent(`Hello ${order.clientName}! This is Kuberamoorthy from Tech Code Creations regarding your website booking (${order.id}).`);
 
-      const billAmt = Number(order.netAmount !== undefined ? order.netAmount : (order.billAmount || 0));
-      const costAmt = Number(order.costAmount !== undefined ? order.costAmount : (order.projectCost || 0));
-      const profitAmt = Number(order.profitAmount !== undefined ? order.profitAmount : Math.max(0, billAmt - costAmt));
-      const marginPct = billAmt > 0 ? ((profitAmt / billAmt) * 100).toFixed(0) : 0;
-
       tr.innerHTML = `
-        <td><span class="order-id-badge">${order.id}</span></td>
         <td>
-          <div class="client-name-cell">${this.escapeHtml(order.clientName)}</div>
-          <div class="client-contact-cell">${order.phone} • ${this.escapeHtml(order.email)}</div>
+          <span class="order-id-badge" style="background:#e0f2fe; color:#0369a1; font-weight:800; border:1px solid #bae6fd;">${order.id}</span>
+          <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">${this.escapeHtml(order.date || '')}</div>
         </td>
         <td>
-          <strong>${this.escapeHtml(order.businessName)}</strong><br>
-          <span style="font-size: 0.82rem; color: var(--text-secondary);">${this.escapeHtml(order.websiteType)}</span>
-        </td>
-        <td>
-          <div style="font-weight: 700; color: #0f172a; font-size:1.02rem;">₹${billAmt.toLocaleString('en-IN')}</div>
-          <div style="margin: 3px 0;">
-            <span class="profit-badge" title="Estimated Net Profit">
-              💰 +₹${profitAmt.toLocaleString('en-IN')} Profit (${marginPct}%)
-            </span>
+          <div class="client-name-cell" style="font-weight:700; color:#0f172a; font-size:0.95rem;">${this.escapeHtml(order.clientName || 'Unnamed')}</div>
+          <div class="client-contact-cell" style="font-size:0.8rem; color:#475569; margin-top:3px;">
+            <a href="tel:${order.phone}" style="color:var(--primary-color); font-weight:700; text-decoration:none;">${order.phone || ''}</a>
+            ${order.email && !order.email.includes("Not provided") ? ` • <span style="color:#64748b;">${this.escapeHtml(order.email)}</span>` : ''}
           </div>
-          <span style="font-size: 0.72rem; font-weight: 700; color: ${order.paymentStatus === 'PAID' ? '#059669' : '#d97706'};">${order.paymentStatus || 'PAYMENT DUE'}</span>
         </td>
         <td>
-          <select class="form-control" style="padding: 6px 10px; font-size: 0.8rem; border-radius: var(--radius-sm);" onchange="app.updateOrderStatus('${order.id}', this.value)">
+          <div style="font-weight:700; color:#0f172a;">${this.escapeHtml(order.businessName || 'Business Startup')}</div>
+          <span style="font-size:0.75rem; display:inline-block; margin-top:4px; padding:2px 8px; border-radius:12px; background:#f0fdf4; color:#15803d; font-weight:700; border:1px solid #bbf7d0;">${this.escapeHtml(order.websiteType || 'Custom Website')}</span>
+        </td>
+        <td>
+          <div style="font-size:0.78rem; font-weight:700; color:#0284c7; margin-bottom:3px;">⏱️ ${this.escapeHtml(order.timeline || 'Standard')}</div>
+          <div style="font-size:0.82rem; color:#334155; max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${this.escapeHtml(order.details || '')}">
+            ${this.escapeHtml(order.details || 'Website booking inquiry')}
+          </div>
+        </td>
+        <td>
+          <select class="form-control" style="padding: 6px 10px; font-size: 0.8rem; border-radius: var(--radius-sm); font-weight:600;" onchange="app.updateOrderStatus('${order.id}', this.value)">
             <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
             <option value="In Review" ${order.status === 'In Review' ? 'selected' : ''}>In Review</option>
             <option value="In Progress" ${order.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
@@ -654,23 +931,107 @@ class TechCodeApp {
         </td>
         <td>
           <div class="table-actions">
-            <!-- CREATE / VIEW BILL BUTTON -->
-            <button class="action-btn btn-bill" title="Generate Bill / Invoice" onclick="app.generateBill('${order.id}')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <!-- Convert to Bill -->
+            <button class="action-btn btn-bill" title="Convert Booking into Official Bill" onclick="app.convertBookingToBill('${order.id}')" style="background:#ecfdf5; color:#059669; border-color:#a7f3d0; padding:4px 8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+              <span style="font-size:0.75rem; font-weight:800; margin-left:3px;">+ Bill</span>
             </button>
-            <button class="action-btn" title="Scan / View QR Code" onclick="app.showQrModal('${order.id}')" style="color:#0284c7;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-            </button>
-            <button class="action-btn" title="View Full Details" onclick="app.viewOrderDetails('${order.id}')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-            </button>
+            <!-- Chat on WhatsApp -->
             <a class="action-btn btn-wa" href="https://wa.me/91${(order.phone || '').replace(/\D/g,'')}?text=${waMsg}" target="_blank" title="Chat on WhatsApp">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </a>
-            <a class="action-btn" href="tel:${order.phone}" title="Call Client">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.44-5.15-3.75-6.59-6.59l1.97-1.57c.28-.28.36-.67.25-1.02A11.36 11.36 0 019 4.31c0-.56-.45-1-1-1H4.5c-.55 0-1 .45-1 1C3.5 13.04 10.96 20.5 20.01 20.5c.55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z"/></svg>
+            <!-- View Booking Details -->
+            <button class="action-btn" title="View Full Booking Details" onclick="app.viewOrderDetails('${order.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+            <!-- Delete Booking -->
+            <button class="action-btn btn-del" title="Delete Booking" onclick="app.deleteOrder('${order.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  renderAdminBills(bills) {
+    const tbody = document.getElementById("adminBillsTableBody");
+    const emptyRow = document.getElementById("emptyBillsRow");
+    if (!tbody) return;
+
+    tbody.querySelectorAll("tr:not(#emptyBillsRow)").forEach(tr => tr.remove());
+
+    if (!bills || bills.length === 0) {
+      if (emptyRow) emptyRow.style.display = "table-row";
+      return;
+    }
+    if (emptyRow) emptyRow.style.display = "none";
+
+    bills.forEach(order => {
+      const tr = document.createElement("tr");
+
+      const waMsg = encodeURIComponent(`Hello ${order.clientName}! This is Kuberamoorthy from Tech Code Creations regarding your invoice (${order.invoiceNo || order.id}).`);
+
+      const billAmt = Number(order.netAmount !== undefined ? order.netAmount : (order.billAmount || 0));
+      const costAmt = Number(order.costAmount !== undefined ? order.costAmount : (order.projectCost || 0));
+      const profitAmt = Number(order.profitAmount !== undefined ? order.profitAmount : Math.max(0, billAmt - costAmt));
+      const marginPct = billAmt > 0 ? ((profitAmt / billAmt) * 100).toFixed(0) : 0;
+
+      tr.innerHTML = `
+        <td>
+          <span class="order-id-badge" style="background:#0f172a; color:#ffffff; font-weight:800;">${order.invoiceNo || order.id}</span>
+          <div style="font-size:0.75rem; color:#64748b; margin-top:4px;">${this.escapeHtml(order.date || '')}</div>
+        </td>
+        <td>
+          <div class="client-name-cell" style="font-weight:700; color:#0f172a; font-size:0.95rem;">${this.escapeHtml(order.clientName)}</div>
+          <div style="font-size:0.8rem; color:#475569; margin-top:2px;">${this.escapeHtml(order.businessName || '')}</div>
+          <div class="client-contact-cell" style="font-size:0.76rem; color:#64748b; margin-top:2px;">
+            <a href="tel:${order.phone}" style="color:var(--primary-color); font-weight:600; text-decoration:none;">${order.phone}</a>
+          </div>
+        </td>
+        <td>
+          <strong style="font-size:0.86rem; color:#0f172a;">${this.escapeHtml(order.category || order.websiteType || 'Web Development')}</strong><br>
+          <span style="font-size: 0.8rem; color: #475569;">${this.escapeHtml(order.items && order.items[0] ? order.items[0].description : (order.websiteType || 'Custom Project'))}</span>
+        </td>
+        <td>
+          <div style="font-weight: 800; color: #0f172a; font-size:1.05rem;">₹${billAmt.toLocaleString('en-IN')}</div>
+          <div style="margin: 3px 0;">
+            <span class="profit-badge" title="Estimated Net Profit">
+              💰 +₹${profitAmt.toLocaleString('en-IN')} Profit (${marginPct}%)
+            </span>
+          </div>
+          <span style="font-size: 0.72rem; font-weight: 800; padding:2px 8px; border-radius:10px; display:inline-block; background:${order.paymentStatus === 'PAID' ? '#dcfce7' : '#fef3c7'}; color: ${order.paymentStatus === 'PAID' ? '#15803d' : '#b45309'}; border:1px solid ${order.paymentStatus === 'PAID' ? '#bbf7d0' : '#fde68a'};">${order.paymentStatus || 'PAYMENT DUE'}</span>
+        </td>
+        <td>
+          <select class="form-control" style="padding: 6px 10px; font-size: 0.8rem; border-radius: var(--radius-sm); font-weight:600;" onchange="app.updateOrderStatus('${order.id}', this.value)">
+            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="In Review" ${order.status === 'In Review' ? 'selected' : ''}>In Review</option>
+            <option value="In Progress" ${order.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+            <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
+            <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </td>
+        <td>
+          <div class="table-actions">
+            <!-- VIEW & PRINT BILL -->
+            <button class="action-btn btn-bill" title="View & Print Official Bill" onclick="app.generateBill('${order.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </button>
+            <!-- SCAN QR -->
+            <button class="action-btn" title="Scan / View QR Code" onclick="app.showQrModal('${order.id}')" style="color:#0284c7;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            </button>
+            <!-- WHATSAPP BILL -->
+            <a class="action-btn btn-wa" href="https://wa.me/91${(order.phone || '').replace(/\D/g,'')}?text=${waMsg}" target="_blank" title="Send Bill on WhatsApp">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
             </a>
-            <button class="action-btn btn-del" title="Delete Order" onclick="app.deleteOrder('${order.id}')">
+            <!-- VIEW DETAILS -->
+            <button class="action-btn" title="View Full Details" onclick="app.viewOrderDetails('${order.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+            <!-- DELETE -->
+            <button class="action-btn btn-del" title="Delete Bill" onclick="app.deleteOrder('${order.id}')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
           </div>
@@ -1687,6 +2048,284 @@ class TechCodeApp {
     modal.classList.add("active");
   }
 
+  showMetricDetails(type) {
+    const modal = document.getElementById("metricDetailsModal");
+    const container = document.getElementById("metricDetailsContent");
+    if (!modal || !container) return;
+
+    let totalBilled = 0;
+    let totalExpenses = 0;
+    let totalProfit = 0;
+    let totalCollected = 0;
+
+    this.orders.forEach(o => {
+      const bill = Number(o.netAmount !== undefined ? o.netAmount : (o.billAmount || 0));
+      const cost = Number(o.costAmount !== undefined ? o.costAmount : (o.projectCost || 0));
+      const profit = Number(o.profitAmount !== undefined ? o.profitAmount : Math.max(0, bill - cost));
+      const paid = Number(o.paidAmount !== undefined ? o.paidAmount : (o.paymentStatus === "PAID" ? bill : 0));
+      totalBilled += bill;
+      totalExpenses += cost;
+      totalProfit += profit;
+      totalCollected += paid;
+    });
+
+    const pendingOrders = this.orders.filter(o => o.status === "Pending");
+    const progressOrders = this.orders.filter(o => o.status === "In Progress" || o.status === "In Review");
+    const completedOrders = this.orders.filter(o => o.status === "Completed");
+
+    let title = "";
+    let icon = "📊";
+    let badgeHtml = "";
+    let contentHtml = "";
+
+    switch(type) {
+      case "total":
+        title = "Total Client Orders Overview";
+        icon = "📦";
+        badgeHtml = `<span style="background:#e0f2fe; color:#0369a1; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">${this.orders.length} Active Records</span>`;
+        contentHtml = `
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin:16px 0 20px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; text-align:center;">
+              <span style="font-size:0.75rem; color:#64748b; font-weight:600; display:block;">COMPLETED</span>
+              <strong style="font-size:1.3rem; color:#059669;">${completedOrders.length}</strong>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; text-align:center;">
+              <span style="font-size:0.75rem; color:#64748b; font-weight:600; display:block;">IN PROGRESS</span>
+              <strong style="font-size:1.3rem; color:#0891b2;">${progressOrders.length}</strong>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; text-align:center;">
+              <span style="font-size:0.75rem; color:#64748b; font-weight:600; display:block;">PENDING</span>
+              <strong style="font-size:1.3rem; color:#d97706;">${pendingOrders.length}</strong>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; text-align:center;">
+              <span style="font-size:0.75rem; color:#64748b; font-weight:600; display:block;">TOTAL BILLED</span>
+              <strong style="font-size:1.2rem; color:#0284c7;">₹${totalBilled.toLocaleString('en-IN')}</strong>
+            </div>
+          </div>
+          <h4 style="font-size:0.95rem; margin-bottom:10px; color:#0f172a;">All Orders Listing:</h4>
+          <div style="max-height:280px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${this.renderOrdersSummaryList(this.orders)}
+          </div>
+        `;
+        break;
+
+      case "pending":
+        title = "Pending Client Inquiries";
+        icon = "⏳";
+        badgeHtml = `<span style="background:#fef3c7; color:#b45309; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">${pendingOrders.length} Awaiting Action</span>`;
+        contentHtml = `
+          <p style="color:#64748b; font-size:0.88rem; margin:10px 0 16px;">These are client leads and bookings waiting for requirement confirmation or project kickoff.</p>
+          <div style="max-height:300px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${pendingOrders.length > 0 ? this.renderOrdersSummaryList(pendingOrders) : '<div style="padding:24px; text-align:center; color:#64748b;">No pending inquiries. All caught up!</div>'}
+          </div>
+        `;
+        break;
+
+      case "progress":
+        title = "Projects In Progress";
+        icon = "🚀";
+        badgeHtml = `<span style="background:#cffafe; color:#0e7490; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">${progressOrders.length} Active Builds</span>`;
+        contentHtml = `
+          <p style="color:#64748b; font-size:0.88rem; margin:10px 0 16px;">Web development projects currently being built and tested for clients.</p>
+          <div style="max-height:300px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${progressOrders.length > 0 ? this.renderOrdersSummaryList(progressOrders) : '<div style="padding:24px; text-align:center; color:#64748b;">No projects in progress.</div>'}
+          </div>
+        `;
+        break;
+
+      case "completed":
+        title = "Completed Websites & Delivered Bills";
+        icon = "✅";
+        badgeHtml = `<span style="background:#dcfce7; color:#15803d; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">${completedOrders.length} Delivered</span>`;
+        contentHtml = `
+          <p style="color:#64748b; font-size:0.88rem; margin:10px 0 16px;">Websites fully delivered to clients with official bills generated and archived.</p>
+          <div style="max-height:300px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${completedOrders.length > 0 ? this.renderOrdersSummaryList(completedOrders) : '<div style="padding:24px; text-align:center; color:#64748b;">No completed projects yet.</div>'}
+          </div>
+        `;
+        break;
+
+      case "revenue":
+        title = "Total Billed Revenue Overview";
+        icon = "💰";
+        badgeHtml = `<span style="background:#e0f2fe; color:#0369a1; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">₹${totalBilled.toLocaleString('en-IN')} Gross</span>`;
+        const avgOrder = this.orders.length > 0 ? Math.round(totalBilled / this.orders.length) : 0;
+        contentHtml = `
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:16px 0 20px;">
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:14px;">
+              <span style="font-size:0.75rem; color:#0284c7; font-weight:700; text-transform:uppercase;">Gross Invoiced</span>
+              <div style="font-size:1.45rem; font-weight:800; color:#0369a1;">₹${totalBilled.toLocaleString('en-IN')}</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+              <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Average Project Value</span>
+              <div style="font-size:1.45rem; font-weight:800; color:#0f172a;">₹${avgOrder.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+          <h4 style="font-size:0.95rem; margin-bottom:10px; color:#0f172a;">Billed Invoices List:</h4>
+          <div style="max-height:260px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${this.renderOrdersSummaryList(this.orders)}
+          </div>
+        `;
+        break;
+
+      case "expenses":
+        title = "Project Costs & Expenses Breakdown";
+        icon = "📉";
+        badgeHtml = `<span style="background:#ffe4e6; color:#be123c; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">₹${totalExpenses.toLocaleString('en-IN')} Total</span>`;
+        contentHtml = `
+          <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:10px; padding:14px; margin:16px 0 20px;">
+            <span style="font-size:0.78rem; color:#be123c; font-weight:700; text-transform:uppercase;">Estimated Operating Costs</span>
+            <div style="font-size:1.45rem; font-weight:800; color:#e11d48;">₹${totalExpenses.toLocaleString('en-IN')}</div>
+            <p style="font-size:0.8rem; color:#9f1239; margin:4px 0 0 0;">Includes domain registrations, hosting servers, third-party APIs, and asset licensing.</p>
+          </div>
+          <h4 style="font-size:0.95rem; margin-bottom:10px; color:#0f172a;">Cost Allocation by Order:</h4>
+          <div style="max-height:260px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${this.renderOrdersSummaryList(this.orders, "cost")}
+          </div>
+        `;
+        break;
+
+      case "profit":
+        title = "Net Calculated Profit & Margin";
+        icon = "📈";
+        const marginPct = totalBilled > 0 ? ((totalProfit / totalBilled) * 100).toFixed(1) : "0.0";
+        badgeHtml = `<span style="background:#dcfce7; color:#15803d; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">₹${totalProfit.toLocaleString('en-IN')} (${marginPct}% Margin)</span>`;
+        contentHtml = `
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:16px 0 20px;">
+            <div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px; padding:14px;">
+              <span style="font-size:0.75rem; color:#15803d; font-weight:700; text-transform:uppercase;">Net Retained Profit</span>
+              <div style="font-size:1.45rem; font-weight:800; color:#16a34a;">₹${totalProfit.toLocaleString('en-IN')}</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+              <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase;">Profit Margin Ratio</span>
+              <div style="font-size:1.45rem; font-weight:800; color:#0f172a;">${marginPct}%</div>
+            </div>
+          </div>
+          <h4 style="font-size:0.95rem; margin-bottom:10px; color:#0f172a;">Project Profit Breakdown:</h4>
+          <div style="max-height:260px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${this.renderOrdersSummaryList(this.orders, "profit")}
+          </div>
+        `;
+        break;
+
+      case "collected":
+        title = "Payments Received & Collections Tracking";
+        icon = "💳";
+        const pendingDues = Math.max(0, totalBilled - totalCollected);
+        badgeHtml = `<span style="background:#f3e8ff; color:#7e22ce; padding:4px 12px; border-radius:20px; font-weight:800; font-size:0.85rem;">₹${totalCollected.toLocaleString('en-IN')} Received</span>`;
+        contentHtml = `
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; margin:16px 0 20px;">
+            <div style="background:#faf5ff; border:1px solid #d8b4fe; border-radius:10px; padding:14px;">
+              <span style="font-size:0.75rem; color:#7e22ce; font-weight:700; text-transform:uppercase;">Total Received (Paid)</span>
+              <div style="font-size:1.45rem; font-weight:800; color:#6b21a8;">₹${totalCollected.toLocaleString('en-IN')}</div>
+            </div>
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px;">
+              <span style="font-size:0.75rem; color:#b45309; font-weight:700; text-transform:uppercase;">Pending Receivables</span>
+              <div style="font-size:1.45rem; font-weight:800; color:#d97706;">₹${pendingDues.toLocaleString('en-IN')}</div>
+            </div>
+          </div>
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:0.82rem; color:#475569;">
+            UPI Payment Receiver: <strong style="color:#0f172a; font-family:monospace;">8248688471@upi</strong> (Tech Code Creations)
+          </div>
+          <h4 style="font-size:0.95rem; margin-bottom:10px; color:#0f172a;">Client Payment Status:</h4>
+          <div style="max-height:260px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px;">
+            ${this.renderOrdersSummaryList(this.orders, "payment")}
+          </div>
+        `;
+        break;
+    }
+
+    container.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1.5px solid #e2e8f0; padding-bottom:14px; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.6rem;">${icon}</span>
+          <div>
+            <h3 style="font-size:1.25rem; font-weight:800; color:#0f172a; margin:0;">${title}</h3>
+            <span style="font-size:0.82rem; color:#64748b;">Tech Code Creations Admin Analytics</span>
+          </div>
+        </div>
+        <div>${badgeHtml}</div>
+      </div>
+      <div>${contentHtml}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:14px; border-top:1px solid #e2e8f0;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal('metricDetailsModal')" style="font-weight:700;">Close</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.filterTableFromModal('${type}');} closeModal('metricDetailsModal');" style="font-weight:700; color:#0284c7; border-color:#93c5fd; background:#f0f9ff;">
+            🔍 View in Orders Table
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="if(window.app){app.openManualBillModal();}else{openModal('manualOrderModal');} closeModal('metricDetailsModal');" style="font-weight:700;">
+            + Create Official Bill
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.add("active");
+  }
+
+  filterTableFromModal(type) {
+    let filter = "all";
+    if (type === "pending") filter = "pending";
+    if (type === "progress") filter = "progress";
+    if (type === "completed") filter = "completed";
+
+    this.currentFilter = filter;
+    document.querySelectorAll(".filter-tab").forEach(tab => {
+      tab.classList.toggle("active", tab.dataset.filter === filter);
+    });
+    this.renderAdminOrders();
+
+    const tableElem = document.querySelector(".orders-table-wrapper");
+    if (tableElem) {
+      tableElem.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  renderOrdersSummaryList(ordersList, viewType = "normal") {
+    if (!ordersList || ordersList.length === 0) {
+      return '<div style="padding:20px; text-align:center; color:#64748b;">No matching orders found.</div>';
+    }
+
+    return ordersList.map(o => {
+      const bill = Number(o.netAmount !== undefined ? o.netAmount : (o.billAmount || 0));
+      const cost = Number(o.costAmount !== undefined ? o.costAmount : (o.projectCost || 0));
+      const profit = Number(o.profitAmount !== undefined ? o.profitAmount : Math.max(0, bill - cost));
+      const paid = Number(o.paidAmount !== undefined ? o.paidAmount : (o.paymentStatus === "PAID" ? bill : 0));
+
+      let extraText = `₹${bill.toLocaleString('en-IN')}`;
+      if (viewType === "cost") {
+        extraText = `<span style="color:#e11d48; font-weight:700;">Cost: ₹${cost.toLocaleString('en-IN')}</span> (Bill: ₹${bill.toLocaleString('en-IN')})`;
+      } else if (viewType === "profit") {
+        extraText = `<span style="color:#15803d; font-weight:700;">Profit: +₹${profit.toLocaleString('en-IN')}</span> (Margin: ${bill > 0 ? ((profit/bill)*100).toFixed(0) : 0}%)`;
+      } else if (viewType === "payment") {
+        extraText = `<span style="color:${o.paymentStatus === 'PAID' ? '#059669' : '#d97706'}; font-weight:700;">${o.paymentStatus || 'PENDING'} (₹${paid.toLocaleString('en-IN')})</span>`;
+      }
+
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid #f1f5f9; background:#ffffff;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-family:monospace; font-weight:700; color:#0284c7; font-size:0.85rem;">${o.invoiceNo || o.id}</span>
+              <strong style="color:#0f172a; font-size:0.92rem;">${this.escapeHtml(o.clientName)}</strong>
+              <span class="status-badge status-${(o.status || 'pending').toLowerCase().replace(' ', '')}" style="font-size:0.72rem; padding:2px 8px;">${o.status}</span>
+            </div>
+            <div style="font-size:0.8rem; color:#64748b; margin-top:2px;">
+              ${this.escapeHtml(o.websiteType || o.businessName || 'Web Project')} • ${extraText}
+            </div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.generateBill('${o.id}');} closeModal('metricDetailsModal');" style="padding:4px 10px; font-size:0.78rem; font-weight:700;">
+              📄 Bill
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="if(window.app){app.viewOrderDetails('${o.id}');} closeModal('metricDetailsModal');" style="padding:4px 10px; font-size:0.78rem; font-weight:700;">
+              👁️ Details
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
   deleteOrder(orderId) {
     if (confirm(`Are you sure you want to delete order ${orderId}?`)) {
       this.orders = this.orders.filter(o => o.id !== orderId);
@@ -2516,6 +3155,18 @@ window.convertNumberToIndianWords = convertNumberToIndianWords;
 window.resetBillSequence = (promptUser = true) => window.app && window.app.resetBillSequence(promptUser);
 window.toggleManualBillFullscreen = () => window.app && window.app.toggleManualBillFullscreen();
 window.openCloudflareModal = () => window.app && window.app.openCloudflareModal();
+window.showMetricDetails = (type) => window.app && window.app.showMetricDetails(type);
+window.switchAdminSection = (id) => window.app && window.app.switchAdminSection(id);
+window.toggleThreeDotMenu = (e) => window.app && window.app.toggleThreeDotMenu(e);
+window.closeThreeDotMenu = () => window.app && window.app.closeThreeDotMenu();
+window.switchDashboardTab = (tab) => window.app && window.app.switchDashboardTab(tab);
+window.convertBookingToBill = (id) => window.app && window.app.convertBookingToBill(id);
+window.openFinancialOverviewModal = () => window.app && window.app.openFinancialOverviewModal();
+window.closeFinancialOverviewModal = () => window.app && window.app.closeFinancialOverviewModal();
+window.openManualBillModal = () => window.app && window.app.openManualBillModal();
+window.exportOrdersCSV = () => window.app && window.app.exportOrdersCSV();
+window.syncAllOrdersToCloudflare = (notify) => window.app && window.app.syncAllOrdersToCloudflare(notify);
+window.clearAllBills = (confirmUser = true) => window.app && window.app.clearAllBills(confirmUser);
 
 let app;
 document.addEventListener("DOMContentLoaded", () => {
