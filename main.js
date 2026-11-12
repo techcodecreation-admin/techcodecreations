@@ -1170,13 +1170,9 @@ class TechCodeApp {
       }
     } catch (e) {}
 
-    // Pull from live Cloudflare D1 and sync local orders to D1
+    // Load D1 as the source of truth; never upload stale local orders on startup.
     if (this.getCleanApiUrl()) {
-      this.fetchOrdersFromCloud(false).then(() => {
-        if (this.orders && this.orders.length > 0) {
-          this.syncLocalOrdersToCloudflare(false);
-        }
-      });
+      this.fetchOrdersFromCloud(false);
       this.startLiveCloudPoller();
     }
   }
@@ -1399,7 +1395,7 @@ class TechCodeApp {
 
   async fetchOrdersFromCloud(showNotify = true) {
     const customUrl = this.getCleanApiUrl();
-    if (!customUrl) return this.orders;
+    if (!customUrl) return null;
 
     try {
       const endpoint = `${customUrl}/api/orders`;
@@ -1407,53 +1403,40 @@ class TechCodeApp {
         method: "GET",
         headers: { "Accept": "application/json" }
       });
-      if (!res.ok) return this.orders;
+      if (!res.ok) return null;
 
       const data = await res.json();
-      if (!data) return this.orders;
+      if (!data) return null;
 
-      let cloudOrders = [];
+      let cloudOrders;
       if (Array.isArray(data)) {
         cloudOrders = data.filter(Boolean);
       } else if (Array.isArray(data.orders)) {
+        if (data.warning) return null;
         cloudOrders = data.orders;
+      } else {
+        return null;
       }
 
-      if (cloudOrders.length > 0) {
-        let newCount = 0;
-        const currentMap = new Map(this.orders.map(o => [o.id, o]));
+      const currentIds = new Set(this.orders.map(order => order.id));
+      const newCount = cloudOrders.filter(order => order && order.id && !currentIds.has(order.id)).length;
+      this.orders = cloudOrders.filter(order => order && order.id);
+      this.orders.sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.id || "").localeCompare(a.id || ""));
+      localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(this.orders));
+      this.renderAdminOrders();
+      this.updateAdminMetrics();
+      this.updateNextBillHeaderBadge();
+      this.renderCloudflareTableRecords();
 
-        cloudOrders.forEach(co => {
-          if (!co || !co.id) return;
-          if (!currentMap.has(co.id)) {
-            currentMap.set(co.id, co);
-            newCount++;
-          } else {
-            const existing = currentMap.get(co.id);
-            if (co.status && co.status !== existing.status) {
-              existing.status = co.status;
-            }
-          }
-        });
-
-        this.orders = Array.from(currentMap.values());
-        this.orders.sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.id || "").localeCompare(a.id || ""));
-        localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(this.orders));
-        this.renderAdminOrders();
-        this.updateAdminMetrics();
-        this.updateNextBillHeaderBadge();
-        this.renderCloudflareTableRecords();
-
-        if (newCount > 0 && showNotify) {
-          this.showToast(`☁️ Synced ${newCount} new order(s) from Cloudflare D1!`, "success");
-        }
+      if (newCount > 0 && showNotify) {
+        this.showToast(`☁️ Synced ${newCount} new order(s) from Cloudflare D1!`, "success");
       }
 
       this.updateCloudflareStatusPill(true);
       return cloudOrders;
     } catch (err) {
       console.warn("Cloud DB fetch fallback:", err);
-      return this.orders;
+      return null;
     }
   }
 
@@ -1508,10 +1491,12 @@ class TechCodeApp {
     const customUrl = this.getCleanApiUrl();
     if (customUrl) {
       const orders = await this.fetchOrdersFromCloud(false);
-      if (orders && orders.length > 0) {
+      if (Array.isArray(orders)) {
         this.showToast(`✅ Loaded ${orders.length} orders from Cloudflare D1!`, "success");
         return;
       }
+      this.showToast("Could not refresh orders from Cloudflare D1. Local data was left unchanged.", "error");
+      return;
     }
 
     this.orders = this.loadOrders();
@@ -1594,14 +1579,7 @@ class TechCodeApp {
     });
     const result = await response.json().catch(() => null);
     if (!response.ok || !result || result.success !== true || result.storage !== "Cloudflare D1 SQL") {
-      throw new Error(result && (result.error || result.message) || "Cloudflare did not confirm deletion from D1. Update the Worker and verify its D1 binding.");
-    }
-
-    if (this._syncChannel) {
-      this._syncChannel.postMessage({
-        type: "SYNC_ORDERS",
-        orders: this.orders.filter(order => order.id !== orderId)
-      });
+      throw new Error(result && (result.error || result.message) || "Cloudflare did not confirm deletion from D1. Deploy the updated Worker and verify its D1 binding.");
     }
     return true;
   }
@@ -2657,6 +2635,12 @@ class TechCodeApp {
       await this.pushDeleteToCloudflare(orderId);
       this.orders = this.orders.filter(order => order.id !== orderId);
       this.saveOrders();
+      if (this._syncChannel) {
+        this._syncChannel.postMessage({
+          type: "SYNC_ORDERS",
+          orders: this.orders
+        });
+      }
       this.showToast(`Order ${orderId} deleted from Cloudflare D1.`, "success");
     } catch (error) {
       console.error("Cloudflare order deletion failed:", error);
