@@ -46,55 +46,95 @@ function getDb(env) {
 // In-memory fallback cache if D1 is temporarily initializing
 const memoryOrders = new Map();
 
-// Automatically create D1 tables if they do not exist
+// Automatically create D1 tables if they do not exist & migrate missing columns
 async function ensureD1Tables(db) {
   if (!db || typeof db.prepare !== "function") return false;
   try {
+    // 1. Create orders table with full schema
     await db.prepare(`
       CREATE TABLE IF NOT EXISTS orders (
         id TEXT PRIMARY KEY,
         invoice_no TEXT,
-        client_name TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        email TEXT,
+        client_name TEXT NOT NULL DEFAULT '',
+        phone TEXT NOT NULL DEFAULT '',
+        email TEXT DEFAULT '',
         address TEXT DEFAULT 'Kumbakonam, Tamil Nadu',
-        website_type TEXT,
+        website_type TEXT DEFAULT 'Custom Website',
         category TEXT DEFAULT 'Web Development',
-        budget TEXT,
-        details TEXT,
+        budget TEXT DEFAULT '',
+        details TEXT DEFAULT '',
         status TEXT DEFAULT 'Completed',
         payment_status TEXT DEFAULT 'PAID',
-        date TEXT NOT NULL,
+        date TEXT NOT NULL DEFAULT '',
         net_amount REAL DEFAULT 0,
         cost_amount REAL DEFAULT 0,
         profit_amount REAL DEFAULT 0,
         paid_amount REAL DEFAULT 0,
-        items_json TEXT,
-        terms TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        items_json TEXT DEFAULT '[]',
+        terms TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
 
+    // 2. Resilient column auto-migration: if orders table was previously created with fewer columns,
+    // dynamically add any missing columns so INSERT / UPDATE statements never fail!
+    try {
+      const tableInfo = await db.prepare("PRAGMA table_info(orders)").all();
+      const existingCols = new Set((tableInfo.results || []).map(r => String(r.name).toLowerCase()));
+      const colsToAdd = [
+        { name: "invoice_no", type: "TEXT" },
+        { name: "client_name", type: "TEXT DEFAULT ''" },
+        { name: "phone", type: "TEXT DEFAULT ''" },
+        { name: "email", type: "TEXT DEFAULT ''" },
+        { name: "address", type: "TEXT DEFAULT 'Kumbakonam, Tamil Nadu'" },
+        { name: "website_type", type: "TEXT DEFAULT 'Custom Website'" },
+        { name: "category", type: "TEXT DEFAULT 'Web Development'" },
+        { name: "budget", type: "TEXT DEFAULT ''" },
+        { name: "details", type: "TEXT DEFAULT ''" },
+        { name: "status", type: "TEXT DEFAULT 'Completed'" },
+        { name: "payment_status", type: "TEXT DEFAULT 'PAID'" },
+        { name: "date", type: "TEXT DEFAULT ''" },
+        { name: "net_amount", type: "REAL DEFAULT 0" },
+        { name: "cost_amount", type: "REAL DEFAULT 0" },
+        { name: "profit_amount", type: "REAL DEFAULT 0" },
+        { name: "paid_amount", type: "REAL DEFAULT 0" },
+        { name: "items_json", type: "TEXT DEFAULT '[]'" },
+        { name: "terms", type: "TEXT DEFAULT ''" },
+        { name: "updated_at", type: "DATETIME DEFAULT CURRENT_TIMESTAMP" },
+        { name: "created_at", type: "DATETIME DEFAULT CURRENT_TIMESTAMP" }
+      ];
+      for (const col of colsToAdd) {
+        if (!existingCols.has(col.name.toLowerCase())) {
+          try {
+            await db.prepare(`ALTER TABLE orders ADD COLUMN ${col.name} ${col.type}`).run();
+          } catch (e) {}
+        }
+      }
+    } catch (e) {}
+
+    // 3. Bill sequence table
     await db.prepare(`
       CREATE TABLE IF NOT EXISTS bill_sequences (
         year INTEGER PRIMARY KEY,
         current_seq INTEGER DEFAULT 1,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
 
+    // 4. Inquiries table
     await db.prepare(`
       CREATE TABLE IF NOT EXISTS inquiries (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        email TEXT,
-        service TEXT,
-        message TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        name TEXT NOT NULL DEFAULT '',
+        phone TEXT NOT NULL DEFAULT '',
+        email TEXT DEFAULT '',
+        service TEXT DEFAULT '',
+        message TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `).run();
+
     return true;
   } catch (e) {
     console.error("Auto table creation error:", e);
@@ -105,7 +145,8 @@ async function ensureD1Tables(db) {
 // Clean and sanitize order fields for SQLite / D1 .bind()
 function sanitizeOrder(body) {
   const id = String(body.id || `TCC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
-  const invoiceNo = String(body.invoiceNo || id);
+  const isBill = Boolean(body.invoiceNo || body.isManualBill);
+  const invoiceNo = isBill ? String(body.invoiceNo || id) : "";
   const clientName = String(body.clientName || body.businessName || "Client");
   const phone = String(body.phone || "");
   const email = String(body.email || "");
@@ -114,12 +155,12 @@ function sanitizeOrder(body) {
   const category = String(body.category || "Web Development");
   const budget = String(body.budget || body.billAmount || "");
   const details = String(body.details || (Array.isArray(body.items) ? body.items.map(i => i.description || i.title || "").filter(Boolean).join(", ") : ""));
-  const status = String(body.status || "Completed");
-  const paymentStatus = String(body.paymentStatus || "PAID");
+  const status = String(body.status || (isBill ? "Completed" : "Pending"));
+  const paymentStatus = String(body.paymentStatus || (isBill ? "PAID" : "PENDING REVIEW"));
   const date = String(body.date || new Date().toISOString().split("T")[0]);
-  const netAmount = Number(body.netAmount || body.billAmount || 0);
+  const netAmount = Number(body.netAmount !== undefined ? body.netAmount : (body.billAmount || 0));
   const costAmount = Number(body.costAmount || body.projectCost || 0);
-  const profitAmount = Number(body.profitAmount || Math.max(0, netAmount - costAmount));
+  const profitAmount = Number(body.profitAmount !== undefined ? body.profitAmount : Math.max(0, netAmount - costAmount));
   const paidAmount = Number(body.paidAmount !== undefined ? body.paidAmount : (paymentStatus === "PAID" ? netAmount : 0));
 
   // Sanitize items_json
@@ -247,27 +288,34 @@ export default {
             "SELECT * FROM orders ORDER BY created_at DESC"
           ).all();
 
-          const orders = (results || []).map(row => ({
-            id: row.id,
-            invoiceNo: row.invoice_no || row.id,
-            clientName: row.client_name,
-            phone: row.phone,
-            email: row.email,
-            address: row.address,
-            websiteType: row.website_type,
-            category: row.category,
-            budget: row.budget,
-            details: row.details,
-            status: row.status,
-            paymentStatus: row.payment_status,
-            date: row.date,
-            netAmount: Number(row.net_amount || 0),
-            costAmount: Number(row.cost_amount || 0),
-            profitAmount: Number(row.profit_amount || 0),
-            paidAmount: Number(row.paid_amount || 0),
-            items: row.items_json ? JSON.parse(row.items_json) : [],
-            terms: row.terms ? row.terms.split("\n") : []
-          }));
+          const orders = (results || []).map(row => {
+            const hasInv = Boolean(row.invoice_no && row.invoice_no.trim() !== "");
+            return {
+              id: row.id,
+              invoiceNo: row.invoice_no || "",
+              isManualBill: hasInv,
+              isWebsiteBooking: !hasInv,
+              clientName: row.client_name,
+              businessName: row.client_name,
+              phone: row.phone,
+              email: row.email,
+              address: row.address,
+              websiteType: row.website_type,
+              category: row.category,
+              budget: row.budget,
+              billAmount: Number(row.net_amount || row.budget || 0),
+              details: row.details,
+              status: row.status,
+              paymentStatus: row.payment_status,
+              date: row.date,
+              netAmount: Number(row.net_amount || 0),
+              costAmount: Number(row.cost_amount || 0),
+              profitAmount: Number(row.profit_amount || 0),
+              paidAmount: Number(row.paid_amount || 0),
+              items: row.items_json ? JSON.parse(row.items_json) : [],
+              terms: row.terms ? row.terms.split("\n") : []
+            };
+          });
 
           return jsonResponse({ success: true, count: orders.length, orders });
         }
