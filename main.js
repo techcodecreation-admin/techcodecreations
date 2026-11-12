@@ -1,14 +1,38 @@
 /* ==========================================================================
    TECH CODE CREATIONS - Main Interactive Logic & Bill Generator
-   Founder & Lead Developer: KUBERAMOORTHY S
-   Contact: 8248688471 | Kumbakonam, Tamil Nadu
    ========================================================================== */
 
-// Admin Credentials
-const ADMIN_CREDENTIALS = {
-  username: "KUBERA",
-  password: "techcode@12345"
-};
+// Admin Security Configuration - Cryptographic SHA-256 Safety Hashes (No plain text passwords stored in database or code)
+const ADMIN_SECURITY_HASHES = [
+  "d6c14cd3ab79bfeadbd056fc896f74b7feb05622495b8a55e1f671115e096e13", 
+  "6425b4cb43f36518203425a54a2b4c67214bdd811df3de50bf9dbbefc1fc7912", 
+  "1177c7d2ee3867857fd16b45d8077f7280ef2713d2140c349476ca6826ce6dc5", 
+  "1e7fb994db29ca8f7c9116d01bf7becfb745d32f8b3e8b04181b92fcd48793ce", 
+  "732e129fd3d30fa12743a7f5c293448715d53123a8ff213c1c2000283925fc86", 
+  "c981bbdffa216158f0a6eaa0643296b90c737ba59a7bc85d435687496e1727c2"  
+];
+
+// Cryptographic Safety Hash Function (SHA-256) - Password never stored in database or plain text
+async function computeSha256(text) {
+  if (!text) return "";
+  try {
+    const data = new TextEncoder().encode(String(text).trim().toLowerCase());
+    const buffer = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(buffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  } catch (err) {
+    let hash = 0;
+    const str = String(text).trim().toLowerCase();
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return String(Math.abs(hash));
+  }
+}
+window.computeSha256 = computeSha256;
+window.ADMIN_SECURITY_HASHES = ADMIN_SECURITY_HASHES;
 
 // Indian Currency Number to Words Converter
 function convertNumberToIndianWords(number) {
@@ -122,6 +146,7 @@ class TechCodeApp {
       localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(this.orders));
       this.renderAdminOrders();
       this.updateAdminMetrics();
+      this.renderCloudflareTableRecords();
     } catch (e) {
       console.error("Error saving orders:", e);
     }
@@ -170,25 +195,11 @@ class TechCodeApp {
       adminLogoutBtn.addEventListener("click", () => this.handleAdminLogout());
     }
 
-    // Fill Demo Credentials
-    const demoCredsBtn = document.getElementById("fillDemoCredsBtn");
-    if (demoCredsBtn) {
-      demoCredsBtn.addEventListener("click", () => {
-        const userField = document.getElementById("adminUsername");
-        const passField = document.getElementById("adminPassword");
-        if (userField && passField) {
-          userField.value = ADMIN_CREDENTIALS.username;
-          passField.value = ADMIN_CREDENTIALS.password;
-          this.showToast("Admin credentials filled! Click 'Sign In'.", "info");
-        }
-      });
-    }
-
     // Toggle Password Visibility
     const togglePassBtn = document.getElementById("togglePassBtn");
     if (togglePassBtn) {
       togglePassBtn.addEventListener("click", () => {
-        const passField = document.getElementById("adminPassword");
+        const passField = document.getElementById("adminSecurityPasskey") || document.getElementById("adminPassword");
         if (passField) {
           passField.type = passField.type === "password" ? "text" : "password";
         }
@@ -474,8 +485,8 @@ class TechCodeApp {
     modal.classList.add("active");
   }
 
-  // Admin Authentication
-  handleAdminLogin(e) {
+  // Admin Authentication (Cryptographic Safety Hash Verification - Password Never Stored in Database or Plain Text)
+  async handleAdminLogin(e) {
     if (e && e.preventDefault) e.preventDefault();
     const passkeyField = document.getElementById("adminSecurityPasskey");
     const userField = document.getElementById("adminUsername");
@@ -486,29 +497,18 @@ class TechCodeApp {
     const username = userField ? userField.value.trim() : "";
     const password = passField ? passField.value.trim() : "";
 
-    const validKeys = [
-      "techcode@12345",
-      "techcode12345",
-      "techcodecreations@gmail.com",
-      "kubera",
-      "kuberamoorthy",
-      "admin",
-      "admin123"
-    ];
+    const candidate = passkeyVal || password || username;
 
-    let isAuthenticated = false;
-
-    if (passkeyVal) {
-      if (validKeys.includes(passkeyVal.toLowerCase()) || passkeyVal === ADMIN_CREDENTIALS.password || passkeyVal.toUpperCase() === "KUBERA") {
-        isAuthenticated = true;
+    if (!candidate) {
+      if (errorElem) {
+        errorElem.textContent = "Please enter your administrative security key.";
+        errorElem.style.display = "block";
       }
-    } else if (username || password) {
-      const isUserValid = validKeys.includes(username.toLowerCase()) || username.toUpperCase() === "KUBERA" || username === ADMIN_CREDENTIALS.username;
-      const isPassValid = validKeys.includes(password.toLowerCase()) || password === ADMIN_CREDENTIALS.password;
-      if (isUserValid && isPassValid) {
-        isAuthenticated = true;
-      }
+      return;
     }
+
+    const hashedInput = await computeSha256(candidate);
+    const isAuthenticated = ADMIN_SECURITY_HASHES.includes(hashedInput);
 
     if (isAuthenticated) {
       if (errorElem) errorElem.style.display = "none";
@@ -516,6 +516,7 @@ class TechCodeApp {
       sessionStorage.removeItem("techcode_admin_logged_out");
       if (passkeyField) passkeyField.value = "";
       if (passField) passField.value = "";
+      if (userField) userField.value = "";
       this.showToast("Admin authenticated successfully.", "success");
       this.showAdminDashboard();
       this.switchAdminSection("sectionMainMenu");
@@ -1127,6 +1128,48 @@ class TechCodeApp {
       : `Database: <strong style="color:#047857;">Connected (${email})</strong>`;
   }
 
+  renderCloudflareTableRecords() {
+    const tbody = document.getElementById("cfDbRecordsTableBody");
+    const countBadge = document.getElementById("cfDbRecordsCountBadge");
+    if (!tbody) return;
+
+    const all = this.orders || [];
+    if (countBadge) {
+      countBadge.textContent = `${all.length} Records`;
+    }
+
+    if (all.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:18px; color:#64748b;">No database records stored yet. Create a bill or make a website booking to see records here.</td></tr>`;
+      return;
+    }
+
+    const rows = all.map(order => {
+      const isBill = Boolean(order.invoiceNo || order.isManualBill);
+      const idDisplay = order.invoiceNo
+        ? `<strong>${this.escapeHtml(order.invoiceNo)}</strong><br><small style="color:#64748b;">${this.escapeHtml(order.id)}</small>`
+        : `<strong>${this.escapeHtml(order.id)}</strong>`;
+      const client = this.escapeHtml(order.clientName || order.name || order.businessName || "Client");
+      const typeBadge = isBill
+        ? `<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0;">Bill Invoice</span>`
+        : `<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:700; background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;">Web Booking</span>`;
+      const amtVal = order.netAmount !== undefined ? order.netAmount : (order.billAmount !== undefined ? order.billAmount : 0);
+      const amount = amtVal ? `₹${Number(amtVal).toLocaleString('en-IN')}` : "—";
+      const dbStatus = `<span style="color:#047857; font-weight:700;">● Stored</span> <span style="font-size:0.75rem; color:#64748b;">(${this.escapeHtml(order.date || 'Today')})</span>`;
+
+      return `
+        <tr style="border-bottom:1px solid #f1f5f9;">
+          <td style="padding:8px 12px; vertical-align:middle;">${idDisplay}</td>
+          <td style="padding:8px 12px; vertical-align:middle; font-weight:600; color:#0f172a;">${client}</td>
+          <td style="padding:8px 12px; vertical-align:middle;">${typeBadge}</td>
+          <td style="padding:8px 12px; vertical-align:middle; font-weight:700; color:#0f172a;">${amount}</td>
+          <td style="padding:8px 12px; vertical-align:middle;">${dbStatus}</td>
+        </tr>
+      `;
+    }).join("");
+
+    tbody.innerHTML = rows;
+  }
+
   openCloudflareModal() {
     const modal = document.getElementById("cloudflareDbModal");
     if (!modal) return;
@@ -1138,6 +1181,7 @@ class TechCodeApp {
     if (keyInput) {
       keyInput.value = this.getCloudflareApiKey();
     }
+    this.renderCloudflareTableRecords();
     this.testCloudflareConnection();
     modal.classList.add("active");
   }
@@ -1299,6 +1343,7 @@ class TechCodeApp {
         this.renderAdminOrders();
         this.updateAdminMetrics();
         this.updateNextBillHeaderBadge();
+        this.renderCloudflareTableRecords();
 
         if (newCount > 0 && showNotify) {
           this.showToast(`☁️ Synced ${newCount} new order(s) from Cloudflare D1!`, "success");
@@ -1374,6 +1419,7 @@ class TechCodeApp {
     this.renderAdminOrders();
     this.updateAdminMetrics();
     this.updateNextBillHeaderBadge();
+    this.renderCloudflareTableRecords();
     this.showToast(`✅ Database Refreshed: All ${this.orders.length} orders are up to date!`, "success");
   }
 
@@ -3358,6 +3404,7 @@ window.clearAllBills = (confirmUser = true) => window.app && window.app.clearAll
 window.downloadBillImage = () => window.app && window.app.downloadBillImage();
 window.printBillA4 = () => window.app && window.app.printBillA4();
 window.toggleBillViewMode = () => window.app && window.app.toggleBillViewMode();
+window.renderCloudflareTableRecords = () => window.app && window.app.renderCloudflareTableRecords();
 
 let app;
 document.addEventListener("DOMContentLoaded", () => {

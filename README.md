@@ -39,8 +39,7 @@
      - Persistent storage in `localStorage`.
      - Order Confirmation modal with 1-click **Send Order via WhatsApp to 8248688471**.
    - **ADMIN PAGE & CONTROL PORTAL**:
-     - **Username**: `TechCodeCreation`
-     - **Password**: `techcode@12345`
+     - **Security**: Master Security Key verification protected by SHA-256 cryptographic safety hashing (passwords are never stored in database or plain text).
      - Accessible via navigation link, `#admin` on main page, or standalone `admin.html`.
      - Real-time orders table displaying new bookings dynamically.
      - Editable order status dropdown (Pending, In Review, In Progress, Completed, Cancelled).
@@ -71,12 +70,11 @@ Then visit:
 
 ---
 
-## 🔐 Admin Portal Credentials
+## 🔐 Admin Portal Security
 
-| Field | Value |
+| Feature | Protection |
 |---|---|
 | **Portal URL** | [http://localhost:8080/admin.html](http://localhost:8080/admin.html) or `index.html#admin` |
-| **Username** | `TechCodeCreation` |
-| **Password** | `techcode@12345` |
-
-
+| **Authentication** | SHA-256 Cryptographic Hash Safety |
+| **Database Storage** | Passwords are NEVER stored in the database or plain text |
+| **Session Control** | Isolated in-memory browser session |

@@ -969,6 +969,30 @@ For any queries / support contact +91 8248688471.</textarea>
           </button>
         </div>
 
+        <!-- Live Database Records Stored in Table -->
+        <div style="background:#ffffff; border:1.5px solid #e2e8f0; border-radius:12px; overflow:hidden; margin-bottom:18px;">
+          <div style="padding:12px 16px; background:#f8fafc; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+            <strong style="color:#0f172a; font-size:0.88rem;">📊 Database Table Records (Orders &amp; Bills)</strong>
+            <span id="cfDbRecordsCountBadge" style="font-size:0.75rem; background:#0284c7; color:#fff; font-weight:800; padding:2px 8px; border-radius:12px;">0 Records</span>
+          </div>
+          <div style="max-height:220px; overflow-y:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.82rem; text-align:left;">
+              <thead style="background:#f1f5f9; color:#475569; position:sticky; top:0;">
+                <tr>
+                  <th style="padding:8px 12px;">ID / Invoice</th>
+                  <th style="padding:8px 12px;">Client Name</th>
+                  <th style="padding:8px 12px;">Type</th>
+                  <th style="padding:8px 12px;">Amount</th>
+                  <th style="padding:8px 12px;">Database Status</th>
+                </tr>
+              </thead>
+              <tbody id="cfDbRecordsTableBody">
+                <tr><td colspan="5" style="text-align:center; padding:18px; color:#64748b;">Loading database records...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- 2-Minute Cloudflare Dashboard Setup (No Terminal / No Node.js Needed) -->
         <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:16px 18px; margin-bottom:18px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
@@ -1065,14 +1089,28 @@ For any queries / support contact +91 8248688471.</textarea>
       // Direct fallback handler for login form submission
       const loginForm = document.getElementById('adminLoginForm');
       if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
           if (window.app && typeof window.app.handleAdminLogin === 'function') {
-            window.app.handleAdminLogin(e);
+            await window.app.handleAdminLogin(e);
           } else {
             e.preventDefault();
             const key = passInput ? passInput.value.trim() : '';
-            if (key === 'techcode@12345' || key.toUpperCase() === 'KUBERA' || key.toLowerCase() === 'techcodecreations@gmail.com') {
+            if (!key) return;
+            const validHashes = window.ADMIN_SECURITY_HASHES || [
+              "d6c14cd3ab79bfeadbd056fc896f74b7feb05622495b8a55e1f671115e096e13",
+              "6425b4cb43f36518203425a54a2b4c67214bdd811df3de50bf9dbbefc1fc7912",
+              "1177c7d2ee3867857fd16b45d8077f7280ef2713d2140c349476ca6826ce6dc5",
+              "1e7fb994db29ca8f7c9116d01bf7becfb745d32f8b3e8b04181b92fcd48793ce",
+              "732e129fd3d30fa12743a7f5c293448715d53123a8ff213c1c2000283925fc86",
+              "c981bbdffa216158f0a6eaa0643296b90c737ba59a7bc85d435687496e1727c2"
+            ];
+            let keyHash = '';
+            if (typeof window.computeSha256 === 'function') {
+              keyHash = await window.computeSha256(key);
+            }
+            if (validHashes.includes(keyHash)) {
               sessionStorage.setItem('techcode_admin_session', 'true');
+              if (passInput) passInput.value = '';
               if (card) card.style.display = 'none';
               if (dash) dash.style.display = 'block';
               if (window.app && typeof window.app.switchAdminSection === 'function') {
